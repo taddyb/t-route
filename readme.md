@@ -218,6 +218,13 @@ python3 -m nwm_routing -f -V4 test_AnA_V4_HYFeature.yaml
       ```
    - The latter is a hybrid (MC + diffusive) routing example that should run within a few minutes at most
 
+## Development Setup
+1. **Install test dependencies**
+   - Run this command to install development dependencies
+     ```shell
+     pip install -e .[test]
+     ```
+
 
 ### T-Route Setup Instructions and Troubleshooting Guide for Windows Users - Legacy Conda Version [may have to be built with compiler.sh no-e option]
 

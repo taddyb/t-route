@@ -1,0 +1,18 @@
+[project]
+name="t-route"
+authors = [
+    {name = "DongHa Kim", email = "dongha.kim@noaa.gov"},
+    {name = "Sean Horvath", email = "sean.horvath@noaa.gov"},
+    {name = "Amin Torabi", email = "amin.torabi@noaa.gov"},
+    {name = "Zach Jurgen", email = "jurgen.zach@noaa.gov"},
+]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+doc = [
+    "pydata-sphinx-theme==0.15.4",
+    "myst_parser==3.0.1",
+]
+test = [
+    "pytest==8.3.2",
+]
