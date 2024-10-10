@@ -79,3 +79,9 @@ bower_components/
 .grunt/
 src/vendor/
 dist/
+
+# SPHINX #
+##########
+# sphinx build directory
+**/build/
+doc/sphinx/build

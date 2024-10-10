@@ -1,0 +1,52 @@
+.sd-card .sd-card-img-top {
+    max-height: 100px; 
+    max-width: 100px;   
+    width: auto;       
+    height: auto;       
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 10px;
+    margin-bottom: 10px; 
+    object-fit: contain; 
+  }
+  
+  @media (max-width: 768px) {
+    .sd-card .sd-card-img-top {
+      max-height: 80px;
+      max-width: 80px;
+    }
+  }
+
+.sd-btn-secondary,
+.btn-secondary {
+    background-color: #4a6da7 !important; /* Matte blue */
+    border-color: #4a6da7 !important;
+    color: #ffffff !important; /* White text for contrast */
+}
+
+.sd-btn-secondary:hover,
+.btn-secondary:hover,
+.sd-btn-secondary:focus,
+.btn-secondary:focus {
+    background-color: #3c5a8c !important; /* Slightly darker on hover/focus */
+    border-color: #3c5a8c !important;
+}
+
+/* Dark mode adjustments */
+html[data-theme="dark"] .sd-btn-secondary,
+html[data-theme="dark"] .btn-secondary {
+    background-color: #5d82c1 !important; /* Lighter matte blue for dark mode */
+    border-color: #5d82c1 !important;
+}
+
+html[data-theme="dark"] .sd-btn-secondary:hover,
+html[data-theme="dark"] .btn-secondary:hover,
+html[data-theme="dark"] .sd-btn-secondary:focus,
+html[data-theme="dark"] .btn-secondary:focus {
+    background-color: #6e90ca !important; /* Even lighter on hover/focus in dark mode */
+    border-color: #6e90ca !important;
+}
+
+html[data-theme=dark] .sd-card img[src*='.svg'] {
+    filter: invert(0.82) brightness(0.8) contrast(1.2);
+}

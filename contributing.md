@@ -246,7 +246,7 @@ please test, document, style check
 (see ['Black'](https://pypi.org/project/black/)), 
 and prepare (as-needed) demonstration notebooks, etc. 
 More information about pull requests can be found 
-[here](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests). 
+[at this link](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests). 
 From that page:
 > "Pull requests let you tell others about changes you've pushed 
 to a branch in a repository on GitHub. Once a pull request is 
