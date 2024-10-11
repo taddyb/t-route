@@ -49,6 +49,7 @@ Thumbs.db
 *.pyc
 *.egg-info/
 __pycache__/
+**/__pycache__/
 *.py[cod]
 .env
 .python-version
@@ -83,5 +84,4 @@ dist/
 # SPHINX #
 ##########
 # sphinx build directory
-**/build/
 doc/sphinx/build
