@@ -21,7 +21,7 @@ network_topology_parameters:
         break_network_at_waterbodies: True 
         level_pool:
             #----------
-            level_pool_waterbody_parameter_file_path: /glade/scratch/donghakim/HurricaneLaura/domain/LAKEPARM_NWMv2.1.nc #domain/LAKEPARM_NWMv2.1.nc  
+            level_pool_waterbody_parameter_file_path: domain/LAKEPARM_NWMv2.1.nc  
         rfc:
             #----------
             reservoir_parameter_file                : domain/reservoir_index_AnA.nc
@@ -41,16 +41,16 @@ compute_parameters:
         wrf_hydro_channel_restart_file           : restart/HYDRO_RST.2020-08-26_00:00_DOMAIN1
         wrf_hydro_channel_ID_crosswalk_file      : domain/RouteLink_NWMv2.1.nc
         wrf_hydro_waterbody_restart_file         : restart/HYDRO_RST.2020-08-26_00:00_DOMAIN1
-        wrf_hydro_waterbody_ID_crosswalk_file    : /glade/scratch/donghakim/HurricaneLaura/domain/LAKEPARM_NWMv2.1.nc #domain/LAKEPARM_NWMv2.1.nc
-        wrf_hydro_waterbody_crosswalk_filter_file: /glade/scratch/donghakim/HurricaneLaura/domain/LAKEPARM_NWMv2.1.nc #domain/LAKEPARM_NWMv2.1.nc
+        wrf_hydro_waterbody_ID_crosswalk_file    : domain/LAKEPARM_NWMv2.1.nc
+        wrf_hydro_waterbody_crosswalk_filter_file: domain/LAKEPARM_NWMv2.1.nc
     hybrid_parameters:
         run_hybrid_routing         : True
         diffusive_domain           : domain/unit_test_RS/coastal_domain.yaml 
         use_natl_xsections         : False
-        topobathy_domain           : domain/final_diffusive_natural_xs.nc 
+        topobathy_domain           : ../HurricaneLaura/domain/final_diffusive_natural_xs.nc 
         run_refactored_network     : False
         refactored_domain          : domain/unit_test_RS/refactored_coastal_domain.yaml 
-        refactored_topobathy_domain: domain/refac_final_diffusive_natural_xs.nc
+        refactored_topobathy_domain: ../HurricaneLaura/domain/refac_final_diffusive_natural_xs.nc
         coastal_boundary_domain    : domain/unit_test_RS/coastal_boundary_domain.yaml
     forcing_parameters:
         #----------

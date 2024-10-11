@@ -1,13 +1,14 @@
+from pathlib import Path
+from typing import Any, Dict, List, Tuple
+
 import pytest
 import yaml
-from pathlib import Path
-from typing import Any, List, Dict, Tuple
 from _pytest.fixtures import FixtureRequest
 
 
 def find_config_files() -> List[Path]:
     """Finds all `.yaml` coinfiguration files within the `test/` dir
-    
+
     Returns
     -------
     List[Path]

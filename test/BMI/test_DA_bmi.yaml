@@ -1,4 +1,4 @@
-#--------------------------------------------------------------------------------
+#---------------------------------------------/large_network/-----------------------------------
 log_parameters:
     #----------
     showtiming: False
@@ -47,23 +47,23 @@ compute_parameters:
         start_datetime: "2015-08-16_00:00:00"
     hybrid_parameters:
         run_hybrid_routing: False
-        diffusive_domain  : # /home/sean.horvath/projects/t-route/test/unit_test_hyfeature/domain/coastal_domain.yaml 
+        diffusive_domain  : # ../unit_test_hyfeature/domain/coastal_domain.yaml 
         use_natl_xsections: False
         topobathy_domain  : # domain/final_diffusive_natural_xs.nc 
         run_refactored_network: False
         refactored_domain: # domain/unit_test_noRS/refactored_coastal_domain.yaml 
         refactored_topobathy_domain: # domain/refac_final_diffusive_natural_xs.nc 
-        coastal_boundary_domain: # /home/sean.horvath/projects/t-route/test/unit_test_hyfeature/domain/coastal_boundary_domain.yaml
+        coastal_boundary_domain: # ../unit_test_hyfeature/domain/coastal_boundary_domain.yaml
     forcing_parameters:
         #----------
         qts_subdivisions            : 12
         dt                          : 300 # [sec]
         qlat_input_folder           : /home/sean.horvath/projects/data/large_network/sample_qlat_files
         qlat_file_pattern_filter    : "*.CHRTOUT_DOMAIN1.csv"
-        nexus_input_folder          : #/home/sean.horvath/projects/t-route/test/unit_test_hyfeature/channel_forcing 
+        nexus_input_folder          : #../unit_test_hyfeature/channel_forcing 
         nexus_file_pattern_filter   : #"*NEXOUT.csv" #OR "*NEXOUT.parquet" OR "nex-*"
         binary_nexus_file_folder    : #binary_files # this is required if nexus_file_pattern_filter="nex-*"
-#        coastal_boundary_input_file : /home/sean.horvath/projects/t-route/test/unit_test_hyfeature/channel_forcing/schout_1.nc  
+#        coastal_boundary_input_file : ../unit_test_hyfeature/channel_forcing/schout_1.nc  
         nts                         : 48 #288 for 1day
         max_loop_size               : 1 # [hr]  
     data_assimilation_parameters:
@@ -80,7 +80,7 @@ compute_parameters:
             crosswalk_gage_field          : # 'gages'
             crosswalk_segID_field         : # 'link'
             wrf_hydro_lastobs_file        :                
-            lastobs_output_folder         : /home/sean.horvath/projects/t-route/test/unit_test_hyfeature/lastobs
+            lastobs_output_folder         : ../unit_test_hyfeature/lastobs
         reservoir_da:
             #----------
             reservoir_persistence_usgs  : True
@@ -89,7 +89,7 @@ compute_parameters:
 #--------------------------------------------------------------------------------
 output_parameters:
     #----------
-    test_output: #/home/sean.horvath/projects/t-route/test/unit_test_hyfeature/output/unit_test_hyfeature.pkl
+    test_output: #../unit_test_hyfeature/output/unit_test_hyfeature.pkl
 #    lite_restart:
         #----------
 #        lite_restart_output_directory: /glade/u/home/shorvath/projects/t-route/test/LowerColorado_TX/restart/

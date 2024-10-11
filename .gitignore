@@ -85,3 +85,11 @@ dist/
 ##########
 # sphinx build directory
 doc/sphinx/build
+
+# LINTING #
+###########
+**/.ruff_cache
+
+# PYTEST #
+##########
+**/.pytest_cache
