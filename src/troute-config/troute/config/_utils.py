@@ -1,8 +1,8 @@
-from contextlib import contextmanager
-from pydantic import BaseModel
 import inspect
-
+from contextlib import contextmanager
 from typing import Type
+
+from pydantic import BaseModel
 
 
 def recursively_update_forward_refs(base_model: Type[BaseModel]):

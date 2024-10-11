@@ -8,7 +8,7 @@
 
 project = 'T-Route'
 copyright = '2024, NOAA-OWP'
-author = 'DongHa Kim, Sean Horvath, Amin Torabi, Zach Jurgen'
+author = 'DongHa Kim, Sean Horvath, Amin Torabi, Zach Jurgen, Austin Raney'
 # release = '2.4.0'
 
 # -- General configuration ---------------------------------------------------

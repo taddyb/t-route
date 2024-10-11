@@ -1,10 +1,8 @@
 from pathlib import Path
-from pydantic import (
-    FilePath as PydanticFilePath,
-    DirectoryPath as PydanticDirectoryPath,
-)
-
 from typing import TYPE_CHECKING
+
+from pydantic import DirectoryPath as PydanticDirectoryPath
+from pydantic import FilePath as PydanticFilePath
 
 if TYPE_CHECKING:
     from pydantic.typing import CallableGenerator

@@ -5,6 +5,7 @@ authors = [
     {name = "Sean Horvath", email = "sean.horvath@noaa.gov"},
     {name = "Amin Torabi", email = "amin.torabi@noaa.gov"},
     {name = "Zach Jurgen", email = "jurgen.zach@noaa.gov"},
+    {name = "Austin Raney", email = "austin.raney@noaa.gov"},
 ]
 dynamic = ["version"]
 dependencies = [

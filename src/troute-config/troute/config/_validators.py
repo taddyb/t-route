@@ -1,7 +1,7 @@
-from pydantic.fields import ModelField
 from datetime import datetime
 from typing import Tuple, TypeVar, Union
 
+from pydantic.fields import ModelField
 
 T = TypeVar("T")
 """Some generic type T"""
