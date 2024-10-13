@@ -6,6 +6,24 @@ T-Route - Tree-Based Channel Routing
     :gutter: 2 3 4 4
 
     .. grid-item-card::
+        :img-top: _static/index_getting_started.svg
+        :text-align: center
+
+        **Getting Started**
+        ^^^
+
+        This guide will describe how to set up your
+        build environment and compile T-Route.
+
+        +++
+
+        .. button-ref:: getting_started
+            :color: secondary
+            :click-parent:
+
+            Build/Compile Guide
+
+    .. grid-item-card::
         :img-top: _static/index_user_guide.svg
         :text-align: center
 
@@ -31,7 +49,8 @@ T-Route - Tree-Based Channel Routing
         ^^^
 
         The reference guide contains a detailed description of
-        the SciPy API. The reference describes how the methods work and which parameters can
+        internal T-Route methods and its API. 
+        The reference describes how the methods work and which parameters can
         be used. It assumes that you have an understanding of the key concepts.
 
         +++
@@ -41,24 +60,6 @@ T-Route - Tree-Based Channel Routing
             :click-parent:
 
             Reference Guide
-
-    .. grid-item-card::
-        :img-top: _static/index_getting_started.svg
-        :text-align: center
-
-        **Getting Started**
-        ^^^
-
-        This guide will describe how to set up your
-        build environment and compile T-Route.
-
-        +++
-
-        .. button-ref:: getting_started
-            :color: secondary
-            :click-parent:
-
-            Build/Compile Guide
 
     .. grid-item-card::
         :img-top: _static/index_contribute.svg

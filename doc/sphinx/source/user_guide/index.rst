@@ -16,6 +16,8 @@ User Guide
 Subpackages
 -----------
 
+Below, you can find the complete user guide organized by subpackages
+
 ==================  ======================================================
 Subpackage          Description
 ==================  ======================================================
@@ -26,11 +28,14 @@ Subpackage          Description
 :mod:`routing`      Handles flow segment and reservoir routing modules.
 ==================  ======================================================
 
-Below, you can find the complete user guide organized by subpackages.
-
 .. toctree::
    :caption: User guide
    :maxdepth: 1
 
+   kernel
    config
+   network
+   nwm
+   routing
+   bmi
 

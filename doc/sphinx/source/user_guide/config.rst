@@ -6,15 +6,22 @@ troute-config (:mod:`Config`)
 
 
 T-Route Config Schema
-----------------
+---------------------
 
 The :mod:`Config(BaseModel)` class 
 
-:mod:`LoggingParameters`
-^^^^^^^^^^^^^^^^^^^^^^^^
 
 :mod:`NetworkTopologyParameters`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. highlight:: python
+
+The following subsection defines variables used in the creation of river
+network topology. The class consists of three Pydantic BaseModels:
+
+    preprocessing_parameters: "PreprocessingParameters" = Field(default_factory=dict)
+    supernetwork_parameters: "SupernetworkParameters"
+    waterbody_parameters: "WaterbodyParameters" = Field(default_factory=dict)
 
 :mod:`ComputeParameters`
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -25,6 +32,24 @@ The :mod:`Config(BaseModel)` class
 :mod:`BMIParameters`
 ^^^^^^^^^^^^^^^^^^^^
 
+
+:mod:`LoggingParameters`
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+These settings are viewing internal T-Route debugging statements.
+By default, :mod:`log_level` is set to :mod:`DEBUG` with no :mod:`log_directory` defined. 
+
+.. highlight:: python
+
+These settings can be changed through setting the following in the config file:
+
+    log_parameters:
+
+        showtiming: True
+
+        log_level: INFO
+
+        log_directory: path/to/log_directory
 
 Pydantic (v1) input validation
 ------------------------------
