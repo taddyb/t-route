@@ -5,9 +5,9 @@ name: T-route Unit Test
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "master", "development"]
   pull_request:
-    branches: [ "master" ]
+    branches: [ "master", "development"]
 
 permissions:
   contents: read
@@ -47,6 +47,6 @@ jobs:
       run: |
         ./compiler.sh no-e
     
-    - name: Run Unit Test
+    - name: T-Route Pytests
       run: |
         pytest src/troute-config
