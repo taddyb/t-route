@@ -19,9 +19,14 @@ The :mod:`Config(BaseModel)` class
 The following subsection defines variables used in the creation of river
 network topology. The class consists of three Pydantic BaseModels:
 
-    preprocessing_parameters: "PreprocessingParameters" = Field(default_factory=dict)
-    supernetwork_parameters: "SupernetworkParameters"
-    waterbody_parameters: "WaterbodyParameters" = Field(default_factory=dict)
+    class NetworkTopologyParameters(BaseModel):
+        """
+        Parameters controlling how the stream network is synthesized.
+        """
+
+        preprocessing_parameters: "PreprocessingParameters" = Field(default_factory=dict)
+        supernetwork_parameters: "SupernetworkParameters"
+        waterbody_parameters: "WaterbodyParameters" = Field(default_factory=dict)
 
 :mod:`ComputeParameters`
 ^^^^^^^^^^^^^^^^^^^^^^^^
