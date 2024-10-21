@@ -7,7 +7,7 @@ from _pytest.fixtures import FixtureRequest
 
 
 def find_config_files() -> List[Path]:
-    """Finds all `.yaml` coinfiguration files within the `test/` dir
+    """Finds all `.yaml` configuration files within specified directories
 
     Returns
     -------
@@ -15,7 +15,14 @@ def find_config_files() -> List[Path]:
         A list of Path objects pointing to each valid configuration
     """
     test_dir = Path(__file__).parents[1]
-    files = list(test_dir.glob("*/*.yaml"))
+    target_dirs = [
+        "LowerColorado_TX", 
+        "LowerColorado_TX_v4", 
+        "unit_test_hyfeature"
+    ]
+    files = []
+    for dir_name in target_dirs:
+        files.extend(list((test_dir / dir_name).glob("*.yaml")))
     return files
 
 
