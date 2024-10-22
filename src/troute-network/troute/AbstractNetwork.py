@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import multiprocessing
 from datetime import datetime, timedelta
+from typing import Dict, Optional
 
 import os
 import pathlib
@@ -22,7 +23,11 @@ LOG = logging.getLogger('')
 
 class AbstractNetwork(ABC):
     """
-    
+    Abstract base class for network-based hydrological modeling.
+
+    This class provides a foundation for implementing network models, including
+    methods for managing network connections, waterbodies, forcing data, and
+    routing schemes.
     """
     __slots__ = ["_dataframe", "_waterbody_connections", "_gages",  
                 "_terminal_codes", "_connections", "_waterbody_df", 
@@ -38,8 +43,21 @@ class AbstractNetwork(ABC):
                 "verbose", "showtiming", "break_points", "_routing", "_gl_climatology_df", "_nexus_dict", "_poi_nex_dict"]
 
     
-    def __init__(self, from_files=True, value_dict={}):
+    def __init__(self, from_files: bool = True, value_dict: Optional[Dict] = {}): 
+        """
+        Initialize the AbstractNetwork.
 
+        Parameters
+        ----------
+        from_files : bool, optional
+            If True, initialize from files. If False, use value_dict (default is True)
+        value_dict : dict, optional
+            Dictionary containing initialization values (default is empty dict)
+
+        Returns
+        -------
+        None
+        """
         self._independent_networks = None
         self._reverse_network = None
         self._reaches_by_tw = None
@@ -482,9 +500,16 @@ class AbstractNetwork(ABC):
             self._dataframe = self._dataframe.astype(type)
             
     def initialize_routing_scheme(self,):
-        '''
-        
-        '''
+        """
+        Initialize the routing scheme based on user inputs.
+
+        This method determines the appropriate routing scheme and updates
+        the routing domain accordingly.
+
+        Returns
+        -------
+        None
+        """
         # Get user inputs from configuration file
         run_hybrid = self.hybrid_parameters.get("run_hybrid_routing", False)
         use_topobathy = self.hybrid_parameters.get('use_natl_xsections', False)
@@ -740,7 +765,17 @@ class AbstractNetwork(ABC):
         )
 
     def build_forcing_sets(self,):
+        """
+        Build sets of forcing data for the simulation.
 
+        This method constructs run sets based on the available forcing data
+        and user-specified parameters.
+
+        Returns
+        -------
+        list of dict
+            List of dictionaries containing forcing data sets
+        """
         forcing_parameters = self.forcing_parameters
         supernetwork_parameters = self.supernetwork_parameters
         stream_output = self.output_parameters.get('stream_output', None)
@@ -919,6 +954,16 @@ class AbstractNetwork(ABC):
         return run_sets
     
     def filter_diffusive_nexus_pts(self,):
+        """
+        Filter nexus points for the diffusive domain.
+
+        This method filters the nexus dataframe to include only points
+        relevant to the diffusive domain tailwaters.
+
+        Returns
+        -------
+        None
+        """
         # Filter nexus dataframe containing lat/lon of nexus points for just the diffusive
         # domain tailwaters.
         nexus_latlon = self._nexus_latlon
@@ -1072,7 +1117,21 @@ def read_SCHISM_output(ds, coastal_hy_crosswalk):
 
 
 def read_SCHISM_subset(ds, coastal_hy_crosswalk):
+    """
+    Read and process a subset of SCHISM model output.
 
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        Dataset containing SCHISM output
+    coastal_hy_crosswalk : dict
+        Dictionary mapping SCHISM nodes to HYFeatures segment IDs
+
+    Returns
+    -------
+    pandas.DataFrame
+        Processed SCHISM output subset
+    """
     schism_nodes = coastal_hy_crosswalk
                     
     ds2 = ds.drop_vars(["SCHISM_hgrid_node_x", "SCHISM_hgrid_node_y"])
