@@ -1,17 +1,40 @@
 import pandas as pd
 from pathlib import Path
+from typing import List, Dict, Any
 import pytest
 import troute.nhd_network as nhd_network
 from troute.config import Config
-
 import yaml
 
 @pytest.fixture
-def reservoir_ids():
+def reservoir_ids() -> List[int]:
+    """
+    Provides a list of test reservoir IDs.
+
+    Returns
+    -------
+    List[int]
+        List containing reservoir IDs [401, 402, 403] used in network testing
+    """
     return [401, 402, 403]
 
 @pytest.fixture
-def network_clean():
+def network_clean() -> List[List[int]]:
+    """
+    Provides a clean network configuration for testing.
+
+    Each sublist represents a network node with format:
+    [node_id, distance, downstream_id, waterbody_id]
+
+    Returns
+    -------
+    List[List[int]]
+        List of network nodes where each node contains:
+        - Index 0: Node ID
+        - Index 1: Distance/length value
+        - Index 2: Downstream node ID (-999 for terminal nodes)
+        - Index 3: Associated waterbody ID (0 for no waterbody)
+    """
     return [
         [0, 456, -999, 0],
         [1, 178, 4, 0],
@@ -47,8 +70,23 @@ def network_clean():
         [2800, 920, 2700, 0],
     ]
 
+
 @pytest.fixture
-def network_circulars(network_clean):
+def network_circulars(network_clean: List[List[int]]) -> List[List[int]]:
+    """
+    Extends the clean network by adding circular references for testing.
+
+    Parameters
+    ----------
+    network_clean : List[List[int]]
+        Base network configuration
+
+    Returns
+    -------
+    List[List[int]]
+        Extended network including circular references with same structure as network_clean
+        plus additional circular path test cases
+    """
     return [
         [50, 178, 51, 0],
         [51, 178, 50, 0],
@@ -66,8 +104,21 @@ def network_circulars(network_clean):
         [84, 178, 80, 0],
     ] + network_clean
 
+
 @pytest.fixture
-def test_columns():
+def test_columns() -> Dict[str, int]:
+    """
+    Defines column name to index mapping for network data.
+
+    Returns
+    -------
+    Dict[str, int]
+        Mapping of column names to their corresponding indices:
+        - key: Node ID column index
+        - dx: Distance/length column index
+        - downstream: Downstream node ID column index
+        - waterbody: Waterbody ID column index
+    """
     return {
         "key": 0,
         "dx": 1,
@@ -76,11 +127,28 @@ def test_columns():
     }
 
 @pytest.fixture
-def reverse_test_columns():
+def reverse_test_columns() -> Dict[int, str]:
+    """
+    Provides reverse mapping of test_columns for index to name lookup.
+
+    Returns
+    -------
+    Dict[int, str]
+        Mapping of column indices to their corresponding names
+    """
     return {0: "key", 1: "dx", 2: "downstream", 3: "waterbody"}
 
+
 @pytest.fixture
-def expected_connections():
+def expected_connections() -> Dict[int, List[int]]:
+    """
+    Defines expected network connectivity patterns.
+
+    Returns
+    -------
+    Dict[int, List[int]]
+        Mapping of node IDs to lists of their upstream connecting nodes
+    """
     return {
         0: [],
         1: [4],
@@ -116,8 +184,17 @@ def expected_connections():
         2800: [],
     }
 
+
 @pytest.fixture
-def expected_rconn():
+def expected_rconn() -> Dict[int, List[int]]:
+    """
+    Defines expected reverse network connections.
+
+    Returns
+    -------
+    Dict[int, List[int]]
+        Mapping of node IDs to lists of their downstream connecting nodes
+    """
     return {
         0: [2, 4, 6],
         1: [],
@@ -150,38 +227,96 @@ def expected_rconn():
         26: [27],
         27: [28],
         28: [],
-        2800: []
+        2800: [],
     }
+
 
 @pytest.fixture
 def expected_wbody_connections():
-    return {
-        4: 403,
-        5: 403,
-        16: 401,
-        17: 401,
-        21: 401,
-        26: 402,
-        27: 402
-    }
+    """
+    Defines expected waterbody to node associations.
+
+    Returns
+    -------
+    Dict[int, int]
+        Mapping of node IDs to their associated waterbody IDs
+    """
+    return {4: 403, 5: 403, 16: 401, 17: 401, 21: 401, 26: 402, 27: 402}
 
 @pytest.fixture
-def test_param_df(network_clean, test_columns):
+def test_param_df(network_clean: List[List[int]], test_columns: Dict[str, int]) -> pd.DataFrame:
+    """
+    Creates a pandas DataFrame from network data with proper column naming.
+
+    Parameters
+    ----------
+    network_clean : List[List[int]]
+        Clean network configuration data
+    test_columns : Dict[str, int]
+        Column name to index mapping
+
+    Returns
+    -------
+    pd.DataFrame
+        DataFrame containing network configuration with proper column names and indexing
+    """
     df = pd.DataFrame(network_clean)
     df = df.rename(columns=nhd_network.reverse_dict(test_columns))
     df = df.set_index("key")
     return df
 
 @pytest.fixture
-def test_terminal_code():
+def test_terminal_code() -> int:
+    """
+    Provides the terminal node code used in network configuration.
+
+    Returns
+    -------
+    int
+        Code (-999) indicating terminal nodes in the network
+    """
     return -999
 
 @pytest.fixture
-def test_waterbody_null_code():
+def test_waterbody_null_code() -> int:
+    """
+    Provides the null waterbody code used in network configuration.
+
+    Returns
+    -------
+    int
+        Code (0) indicating no associated waterbody for a node
+    """
     return 0
 
 @pytest.fixture
-def HYFeaturesConfig(validated_config):
+def HYFeaturesConfig(validated_config: Any) -> Dict[str, Any]:
+    """
+    Creates a configuration dictionary for HYFeatures testing.
+
+    Parameters
+    ----------
+    validated_config : Any
+        Configuration validation function
+
+    Returns
+    -------
+    Dict[str, Any]
+        Dictionary containing:
+        - path: Path to configuration directory
+        - log_parameters: Logging configuration
+        - preprocessing_parameters: Network preprocessing settings
+        - supernetwork_parameters: Network topology settings
+        - waterbody_parameters: Waterbody configuration
+        - compute_parameters: Computation settings
+        - forcing_parameters: Model forcing configuration
+        - restart_parameters: Model restart settings
+        - hybrid_parameters: Hybrid routing settings
+        - output_parameters: Output configuration
+        - parity_parameters: Parity check settings
+        - data_assimilation_parameters: DA settings
+        - bmi_parameters: BMI interface parameters
+    """
     path = Path.cwd() / "test/LowerColorado_TX_v4/"
     config = path / "test_AnA_V4_HYFeature_noDA.yaml"
 
@@ -189,15 +324,16 @@ def HYFeaturesConfig(validated_config):
         data = yaml.load(custom_file, Loader=yaml.SafeLoader)
     
     troute_configuration = Config(**data)
-
     config_dict = troute_configuration.dict()
 
+    # Extract main parameter groups
     log_parameters = config_dict.get('log_parameters', {})
     compute_parameters = config_dict.get('compute_parameters', {})
     network_topology_parameters = config_dict.get('network_topology_parameters', {})
     output_parameters = config_dict.get('output_parameters', {})
     bmi_parameters = config_dict.get('bmi_parameters', {})
 
+    # Extract nested parameters
     preprocessing_parameters = network_topology_parameters.get('preprocessing_parameters', {})
     supernetwork_parameters = network_topology_parameters.get('supernetwork_parameters', {})
     waterbody_parameters = network_topology_parameters.get('waterbody_parameters', {})

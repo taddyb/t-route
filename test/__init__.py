@@ -7,6 +7,7 @@ import pytest
 from pydantic import ValidationError
 from troute.config import Config
 
+
 @contextmanager
 def temporarily_change_dir(path: Path):
     """Temporarily changes the current working directory
