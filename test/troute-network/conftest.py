@@ -1,6 +1,6 @@
 import pandas as pd
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Tuple
 import pytest
 import troute.nhd_network as nhd_network
 from troute.config import Config
@@ -290,7 +290,7 @@ def test_waterbody_null_code() -> int:
     return 0
 
 @pytest.fixture
-def HYFeaturesConfig(validated_config: Any) -> Dict[str, Any]:
+def HYFeaturesConfig(validated_config: Any, hyfeatures_test_data: Tuple[Path, Path]) -> Dict[str, Any]:
     """
     Creates a configuration dictionary for HYFeatures testing.
 
@@ -298,6 +298,10 @@ def HYFeaturesConfig(validated_config: Any) -> Dict[str, Any]:
     ----------
     validated_config : Any
         Configuration validation function
+    hyfeatures_test_data: Tuple[Path, Path]
+        A tuple containing:
+        - path: the path to the test dir
+        - config: the config file we want to use
 
     Returns
     -------
@@ -317,8 +321,7 @@ def HYFeaturesConfig(validated_config: Any) -> Dict[str, Any]:
         - data_assimilation_parameters: DA settings
         - bmi_parameters: BMI interface parameters
     """
-    path = Path.cwd() / "test/LowerColorado_TX_v4/"
-    config = path / "test_AnA_V4_HYFeature_noDA.yaml"
+    path, config = hyfeatures_test_data
 
     with open(config) as custom_file:
         data = yaml.load(custom_file, Loader=yaml.SafeLoader)

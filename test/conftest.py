@@ -2,7 +2,7 @@ import os
 from contextlib import contextmanager
 from copy import deepcopy
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
 
 import pytest
 from pydantic import ValidationError
@@ -34,6 +34,20 @@ def temporarily_change_dir(path: Path):
     finally:
         if original_cwd != path:
             os.chdir(original_cwd)
+
+
+@pytest.fixture
+def nhd_test_files() -> Tuple[Path, Path]:
+    path = Path.cwd() / "test/LowerColorado_TX/"
+    config = path / "test_AnA.yaml"
+    return path, config
+
+
+@pytest.fixture
+def hyfeatures_test_data() -> Tuple[Path, Path]:
+    path = Path.cwd() / "test/LowerColorado_TX_v4/"
+    config = path / "test_AnA_V4_HYFeature_noDA.yaml"
+    return path, config
 
 
 @pytest.fixture
