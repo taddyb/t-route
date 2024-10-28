@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from .types import DirectoryPath, FilePath
+from .types import FilePath, DirectoryPath
 
 
 class ReservoirDataAssimilationParameters(BaseModel):

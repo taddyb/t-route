@@ -5,7 +5,7 @@ from typing import Any, Dict
 from troute import HYFeaturesNetwork
 
 
-def test_qlat(HYFeaturesConfig: Dict[str, Any]) -> None:
+def test_qlat(hyfeatures_test_network: Dict[str, Any]) -> None:
     """Test lateral flow input by reading CSV forcing files from an instantiated network.
     
     This test verifies that:
@@ -16,7 +16,7 @@ def test_qlat(HYFeaturesConfig: Dict[str, Any]) -> None:
     
     Parameters
     ----------
-    HYFeaturesConfig : Dict[str, Any]
+    hyfeatures_test_network : Dict[str, Any]
         Configuration dictionary containing network settings:
             - path : str or Path
                 Base directory for test data
@@ -52,18 +52,18 @@ def test_qlat(HYFeaturesConfig: Dict[str, Any]) -> None:
             - No files in first forcing set
             - No lateral flow data assembled
     """
-    os.chdir(HYFeaturesConfig["path"])
+    os.chdir(hyfeatures_test_network["path"])
 
     network = HYFeaturesNetwork.HYFeaturesNetwork(
-        supernetwork_parameters=HYFeaturesConfig["supernetwork_parameters"],
-        waterbody_parameters=HYFeaturesConfig["waterbody_parameters"],
-        data_assimilation_parameters=HYFeaturesConfig["data_assimilation_parameters"],
-        restart_parameters=HYFeaturesConfig["restart_parameters"],
-        compute_parameters=HYFeaturesConfig["compute_parameters"],
-        forcing_parameters=HYFeaturesConfig["forcing_parameters"],
-        hybrid_parameters=HYFeaturesConfig["hybrid_parameters"],
-        preprocessing_parameters=HYFeaturesConfig["preprocessing_parameters"],
-        output_parameters=HYFeaturesConfig["output_parameters"],
+        supernetwork_parameters=hyfeatures_test_network["supernetwork_parameters"],
+        waterbody_parameters=hyfeatures_test_network["waterbody_parameters"],
+        data_assimilation_parameters=hyfeatures_test_network["data_assimilation_parameters"],
+        restart_parameters=hyfeatures_test_network["restart_parameters"],
+        compute_parameters=hyfeatures_test_network["compute_parameters"],
+        forcing_parameters=hyfeatures_test_network["forcing_parameters"],
+        hybrid_parameters=hyfeatures_test_network["hybrid_parameters"],
+        preprocessing_parameters=hyfeatures_test_network["preprocessing_parameters"],
+        output_parameters=hyfeatures_test_network["output_parameters"],
     )
     
     qlat_input_folder = pathlib.Path(network.forcing_parameters["qlat_input_folder"])

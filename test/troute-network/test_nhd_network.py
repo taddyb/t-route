@@ -1,3 +1,4 @@
+import pytest
 from troute import nhd_network
 
 
@@ -35,7 +36,7 @@ def test_reverse_network(expected_connections, expected_rconn):
     rrconn = nhd_network.reverse_network(rconn)
     assert rrconn == connections
 
-
+@pytest.mark.deprecated
 def test_extract_waterbodies(
     test_param_df, test_waterbody_null_code, expected_wbody_connections
 ):

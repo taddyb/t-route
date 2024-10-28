@@ -26,12 +26,6 @@ dependencies = [
     "pydantic<2",
 ]
 
-
-[project.optional-dependencies]
-doc = [
-    "pydata-sphinx-theme[doc]==0.15.4",
-    "sphinx-mdinclude==0.6.2",
-]
 test = [
     "pytest==8.3.2",
 ]

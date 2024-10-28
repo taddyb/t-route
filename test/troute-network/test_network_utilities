@@ -1,0 +1,12 @@
+import pytest
+from typing import Any, Dict
+
+import troute.nhd_network_utilities_v02 as nnu
+
+
+def test_build_forcing_sets(nhd_test_network: Dict[str, Any]):
+    """Create run_sets: sets of forcing files for each loop
+
+    """
+    forcing_parameters = nhd_test_network["forcing_parameters"]
+    run_sets = nnu.build_forcing_sets(forcing_parameters, t0)
