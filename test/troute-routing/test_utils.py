@@ -17,10 +17,10 @@ def test_build_nhd_forcing_sets(
     forcing_parameters = nhd_test_network["forcing_parameters"]
 
     t0 = warmstart_nhd_test["t0"]
-    
-    cwd = Path.cwd()
+
     os.chdir(path)
-    run_sets = nnu.build_forcing_sets(forcing_parameters, t0)   
+    run_sets = nnu.build_forcing_sets(forcing_parameters, t0) 
+    cwd = Path.cwd()
     os.chdir(cwd)
     
     assert run_sets[0]['qlat_files'] == qlat_data['qlat_files']

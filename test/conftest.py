@@ -43,7 +43,16 @@ def temporarily_change_dir(path: Path):
 @pytest.fixture
 def nhd_test_files() -> Tuple[Path, Path]:
     path = Path.cwd() / "test/LowerColorado_TX/"
+    if path.exists() is False:
+        print(Path.cwd())
+        if "test/LowerColorado_TX/" in Path.cwd().__str__():
+            path = Path.cwd()
+        elif "test" in Path.cwd().__str__():
+            path = Path.cwd() / "LowerColorado_TX/"
+        else:
+            raise AssertionError("Cannot find NHD test case")
     config = path / "test_AnA_V4_NHD.yaml"
+    
     return path, config
 
 
@@ -194,8 +203,6 @@ def nhd_test_network(nhd_test_files: Tuple[Path, Path]) -> Dict[str, Any]:
     args = _handle_args_v03(["-f", (path / config).__str__()])
 
     cwd = Path.cwd()
-    
-    # Changing work dirs to validate the strict mode
     os.chdir(path)
     (
         log_parameters,

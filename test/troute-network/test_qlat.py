@@ -1,6 +1,7 @@
 import os
 import pathlib
 from typing import Any, Dict
+from pathlib import Path
 
 from troute import HYFeaturesNetwork
 
@@ -52,6 +53,7 @@ def test_qlat(hyfeatures_test_network: Dict[str, Any]) -> None:
             - No files in first forcing set
             - No lateral flow data assembled
     """
+    cwd = Path.cwd()
     os.chdir(hyfeatures_test_network["path"])
 
     network = HYFeaturesNetwork.HYFeaturesNetwork(
@@ -65,7 +67,6 @@ def test_qlat(hyfeatures_test_network: Dict[str, Any]) -> None:
         preprocessing_parameters=hyfeatures_test_network["preprocessing_parameters"],
         output_parameters=hyfeatures_test_network["output_parameters"],
     )
-    
     qlat_input_folder = pathlib.Path(network.forcing_parameters["qlat_input_folder"])
     all_files = sorted(
         qlat_input_folder.glob(network.forcing_parameters["qlat_file_pattern_filter"])
@@ -78,3 +79,4 @@ def test_qlat(hyfeatures_test_network: Dict[str, Any]) -> None:
 
     network.assemble_forcings(run_sets[0])
     assert network.qlateral.shape[0] > 0
+    os.chdir(cwd)

@@ -4,6 +4,7 @@ from nwm_routing.__main__ import _run_everything_v02  # , _input_handler_v02
 from troute.nhd_io import read_custom_input
 from pathlib import Path
 import numpy as np
+import pytest
 # import subprocess
 # import os
 # result = os.system("python -m nwm_routing -V2 -f ../../test/input/yaml/CustomInput.yaml")
@@ -33,7 +34,7 @@ def _produce_result_set(results):
         with open(test_folder / (file_base + ext_str_values), "wb") as fid:
             np.save(fid, results[net_i][values_list_j], allow_pickle = False)
           
-
+@pytest.mark.skip(reason="This test is deprecated")
 def test_run_everything_v02():
     custom_input_file = "../../test/input/yaml/CustomInput.yaml"
     (

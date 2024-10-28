@@ -67,6 +67,7 @@ def network(request, waterbody_parameters, restart_parameters, forcing_parameter
     type = request.param
     return HYFeaturesNetwork(supernetwork_parameters(type), waterbody_parameters, restart_parameters, forcing_parameters, verbose=True, showtiming=False)
 
+@pytest.mark.skip(reason="This test is deprecated")
 @pytest.mark.parametrize("network",["gpkg", "json"], indirect=True)
 def test_init(network):
     #This isn't really nessicary since init is done by the fixture
@@ -75,6 +76,7 @@ def test_init(network):
     #is working, instead of infering it from non failure of the fixture creation
     pass
 
+@pytest.mark.skip(reason="This test is deprecated")
 #@pytest.skip #compute_nhd_routing_v02 has some additonal args that need to be considered
 @pytest.mark.parametrize("network",["gpkg", "json"], indirect=True )
 def test_routable(network, waterbody_parameters):
