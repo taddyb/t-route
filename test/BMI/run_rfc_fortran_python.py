@@ -4,7 +4,7 @@ import numpy as np
 import xarray as xr
 from troute.network.reservoirs.levelpool.levelpool import MC_Levelpool
 from troute.network.reservoirs.rfc.rfc import MC_RFC
-from troute.routing.fast_reach.reservoir_RFC_da import (reservoir_RFC_da_v2)
+from troute.routing.fast_reach.reservoir_RFC_da import reservoir_RFC_da_v2
 
 reservoir_index_file = "/home/dongha.kim/github/t-route/temp_input/reservoir_index/reservoir_index_Extended_AnA_NWMv2.1.nc"
 rfc_timeseries_folder = "/home/dongha.kim/github/t-route/temp_input/rfc_timeseries/"

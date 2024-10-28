@@ -21,7 +21,6 @@ import bmi_troute
 # import troute_model
 
 
-
 print(t_route_src_path)
 
 

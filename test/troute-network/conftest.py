@@ -1,10 +1,12 @@
-import pandas as pd
 from pathlib import Path
-from typing import List, Dict, Any, Tuple
+from typing import Any, Dict, List, Tuple
+
+import pandas as pd
 import pytest
 import troute.nhd_network as nhd_network
-from troute.config import Config
 import yaml
+from troute.config import Config
+
 
 @pytest.fixture
 def reservoir_ids() -> List[int]:
@@ -17,6 +19,7 @@ def reservoir_ids() -> List[int]:
         List containing reservoir IDs [401, 402, 403] used in network testing
     """
     return [401, 402, 403]
+
 
 @pytest.fixture
 def network_clean() -> List[List[int]]:
@@ -125,6 +128,7 @@ def test_columns() -> Dict[str, int]:
         "downstream": 2,
         "waterbody": 3,
     }
+
 
 @pytest.fixture
 def reverse_test_columns() -> Dict[int, str]:
@@ -243,8 +247,11 @@ def expected_wbody_connections():
     """
     return {4: 403, 5: 403, 16: 401, 17: 401, 21: 401, 26: 402, 27: 402}
 
+
 @pytest.fixture
-def test_param_df(network_clean: List[List[int]], test_columns: Dict[str, int]) -> pd.DataFrame:
+def test_param_df(
+    network_clean: List[List[int]], test_columns: Dict[str, int]
+) -> pd.DataFrame:
     """
     Creates a pandas DataFrame from network data with proper column naming.
 
@@ -265,6 +272,7 @@ def test_param_df(network_clean: List[List[int]], test_columns: Dict[str, int]) 
     df = df.set_index("key")
     return df
 
+
 @pytest.fixture
 def test_terminal_code() -> int:
     """
@@ -276,6 +284,7 @@ def test_terminal_code() -> int:
         Code (-999) indicating terminal nodes in the network
     """
     return -999
+
 
 @pytest.fixture
 def test_waterbody_null_code() -> int:
