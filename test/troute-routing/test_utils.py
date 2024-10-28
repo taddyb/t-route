@@ -44,8 +44,9 @@ def test_da_sets(
 def test_parity_sets(
     nhd_test_network: Dict[str, Any],
     qlat_data: Dict[str, Any], 
+    nhd_validation_files: Dict[str, Any],
 ):
     run_sets = [qlat_data]
     parity_parameters = nhd_test_network["parity_parameters"]
     parity_sets = nnu.build_parity_sets(parity_parameters, run_sets)
-    print(parity_sets)
+    assert parity_sets[0]['validation_files'] == nhd_validation_files['validation_files']
