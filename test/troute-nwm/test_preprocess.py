@@ -1,13 +1,11 @@
-import pytest
-from typing import Any, Dict
 import os
 from pathlib import Path
+from typing import Any, Dict
 
 import pandas as pd
+import pytest
+from nwm_routing.preprocess import nwm_forcing_preprocess
 
-from nwm_routing.preprocess import (
-    nwm_forcing_preprocess,
-)
 
 def test_nhd_preprocess(
     nhd_test_network: Dict[str, Any], 
@@ -66,12 +64,10 @@ def test_nhd_preprocess(
     )
     os.chdir(cwd)
 
-    print(qlats.head())
-
-    # pd.testing.assert_frame_equal(
-    #     expected_nhd_preprocessed_outputs["qlats"].rename(columns=lambda x: int(x)).reset_index(drop=True),
-    #     qlats.reset_index(drop=True),
-    #     check_dtype=False,
-    #     check_exact=False,
-    #     rtol=1e-5
-    # )
+    pd.testing.assert_frame_equal(
+        expected_nhd_preprocessed_outputs["qlats"].rename(columns=lambda x: int(x)).reset_index(drop=True),
+        qlats.reset_index(drop=True),
+        check_dtype=False,
+        check_exact=False,
+        rtol=1e-5
+    )

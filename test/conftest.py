@@ -11,11 +11,9 @@ import pytest
 import yaml
 from nwm_routing.__main__ import _handle_args_v03
 from nwm_routing.input import _input_handler_v03, _input_handler_v04
-from nwm_routing.preprocess import (
-    nwm_initial_warmstate_preprocess,
-    nwm_network_preprocess,
-    unpack_nwm_preprocess_data,
-)
+from nwm_routing.preprocess import (nwm_initial_warmstate_preprocess,
+                                    nwm_network_preprocess,
+                                    unpack_nwm_preprocess_data)
 from pydantic import ValidationError
 from troute.config import Config
 

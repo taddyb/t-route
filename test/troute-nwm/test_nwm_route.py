@@ -1,12 +1,12 @@
-import pytest
-from typing import Any, Dict
 import os
 from pathlib import Path
+from typing import Any, Dict
 
 import pandas as pd
-
-from nwm_routing.__main__ import nwm_route, new_nwm_q0
+import pytest
+from nwm_routing.__main__ import new_nwm_q0, nwm_route
 from nwm_routing.preprocess import nwm_forcing_preprocess
+
 
 def test_nwm_route_execution(
     nhd_test_network: Dict[str, Any], 

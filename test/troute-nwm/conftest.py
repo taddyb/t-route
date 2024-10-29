@@ -1,6 +1,8 @@
-import pytest
-import pandas as pd
 from pathlib import Path
+
+import pandas as pd
+import pytest
+
 
 @pytest.fixture
 def expected_nhd_preprocessed_outputs():

@@ -1,9 +1,10 @@
-from typing import Any, Dict
 import os
 from pathlib import Path
-import pytest
+from typing import Any, Dict
 
+import pytest
 import troute.nhd_network_utilities_v02 as nnu
+
 
 def test_build_nhd_forcing_sets(
     nhd_test_network: Dict[str, Any], 

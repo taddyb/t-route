@@ -297,3 +297,9 @@ def test_waterbody_null_code() -> int:
         Code (0) indicating no associated waterbody for a node
     """
     return 0
+
+
+@pytest.fixture
+def hyfeature_network():
+    cwd = Path.cwd()
+    return pd.read_parquet(cwd / "test/troute-network/sample_outputs/_dataframe.parquet")
