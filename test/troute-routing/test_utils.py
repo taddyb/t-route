@@ -9,9 +9,17 @@ def test_build_nhd_forcing_sets(
     nhd_test_network: Dict[str, Any], 
     warmstart_nhd_test: Dict[str, Any],
     qlat_data: Dict[str, Any],
-) -> Dict[str, Any]:
-    """ Create run_sets: sets of forcing files for each loop
-
+) -> None:
+    """Test the creation of forcing file sets for NHD network simulation.
+    
+    Parameters
+    ----------
+    nhd_test_network : Dict[str, Any]
+        Dictionary containing config network settings
+    warmstart_nhd_test : Dict[str, Any]
+        Dictionary containing warmstart test data for the nhd network
+    qlat_data : Dict[str, Any]
+        Dictionary containing expected lateral flow data paths
     """
     path = nhd_test_network["path"]
     forcing_parameters = nhd_test_network["forcing_parameters"]
