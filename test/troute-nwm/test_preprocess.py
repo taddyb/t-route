@@ -3,6 +3,8 @@ from typing import Any, Dict
 import os
 from pathlib import Path
 
+import pandas as pd
+
 from nwm_routing.preprocess import (
     nwm_forcing_preprocess,
 )
@@ -13,6 +15,7 @@ def test_nhd_preprocess(
     warmstart_nhd_test: Dict[str, Any],
     qlat_data: Dict[str, Any],
     nhd_validation_files: Dict[str, Any],
+    expected_nhd_preprocessed_outputs: Dict[str, Any],
 ):
     path = nhd_test_network["path"]
     forcing_parameters = nhd_test_network["forcing_parameters"]
@@ -63,4 +66,11 @@ def test_nhd_preprocess(
         t0,
     )
     os.chdir(cwd)
-    print(qlats)
+
+    pd.testing.assert_frame_equal(
+        expected_nhd_preprocessed_outputs["qlats"],
+        qlats.reset_index(drop=True),  # Reset index on actual,
+        check_dtype=False,
+        check_exact=False, 
+        rtol=1e-5
+    )
