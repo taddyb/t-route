@@ -302,4 +302,4 @@ def test_waterbody_null_code() -> int:
 @pytest.fixture
 def hyfeature_network():
     cwd = Path.cwd()
-    return pd.read_parquet(cwd / "test/troute-network/sample_outputs/_dataframe.parquet")
+    return pd.read_parquet(cwd / "test/troute-network/data/_dataframe.parquet")
