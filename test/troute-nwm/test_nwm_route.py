@@ -12,7 +12,7 @@ def test_nwm_route_execution(
     nhd_test_network: Dict[str, Any], 
     nhd_built_test_network: Dict[str, Any], 
     warmstart_nhd_test: Dict[str, Any],
-    qlat_data: Dict[str, Any],
+    nhd_qlat_data: Dict[str, Any],
     nhd_validation_files: Dict[str, Any],
     expected_q0 # parquet
 ):
@@ -45,7 +45,7 @@ def test_nwm_route_execution(
     return_courant = compute_parameters.get("return_courant", False)
     qts_subdivisions = forcing_parameters.get("qts_subdivisions", 1)
 
-    run_sets = [qlat_data]
+    run_sets = [nhd_qlat_data]
     t0 = run_sets[0].get("t0")
     dt = forcing_parameters.get('dt')
     nts = run_sets[0].get("nts")
@@ -68,7 +68,7 @@ def test_nwm_route_execution(
     usace_lake_gage_crosswalk = nhd_built_test_network["usace_lake_gage_crosswalk"]
     link_lake_crosswalk = nhd_built_test_network["link_lake_crosswalk"]
 
-    run_sets = [qlat_data]
+    run_sets = [nhd_qlat_data]
     da_sets = [{"usgs_timeslice_files": []}]
 
     break_network_at_waterbodies = nhd_built_test_network["break_network_at_waterbodies"]

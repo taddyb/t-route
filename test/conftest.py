@@ -4,7 +4,7 @@ from contextlib import contextmanager
 from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Tuple, List
 
 import pandas as pd
 import pytest
@@ -14,12 +14,47 @@ from nwm_routing.input import _input_handler_v03, _input_handler_v04
 from nwm_routing.preprocess import (nwm_initial_warmstate_preprocess,
                                     nwm_network_preprocess,
                                     unpack_nwm_preprocess_data)
+from troute.HYFeaturesNetwork import HYFeaturesNetwork
 from pydantic import ValidationError
 from troute.config import Config
 
 
 @pytest.fixture
-def qlat_data():
+def hyfeature_qlat_data() -> List[Dict[str, Any]]:
+    return [{
+        'qlat_files': [
+            '202304020000.CHRTOUT_DOMAIN1.csv',
+            '202304020100.CHRTOUT_DOMAIN1.csv',
+            '202304020200.CHRTOUT_DOMAIN1.csv',
+            '202304020300.CHRTOUT_DOMAIN1.csv',
+            '202304020400.CHRTOUT_DOMAIN1.csv',
+            '202304020500.CHRTOUT_DOMAIN1.csv',
+            '202304020600.CHRTOUT_DOMAIN1.csv',
+            '202304020700.CHRTOUT_DOMAIN1.csv',
+            '202304020800.CHRTOUT_DOMAIN1.csv',
+            '202304020900.CHRTOUT_DOMAIN1.csv',
+            '202304021000.CHRTOUT_DOMAIN1.csv',
+            '202304021100.CHRTOUT_DOMAIN1.csv',
+            '202304021200.CHRTOUT_DOMAIN1.csv',
+            '202304021300.CHRTOUT_DOMAIN1.csv',
+            '202304021400.CHRTOUT_DOMAIN1.csv',
+            '202304021500.CHRTOUT_DOMAIN1.csv',
+            '202304021600.CHRTOUT_DOMAIN1.csv',
+            '202304021700.CHRTOUT_DOMAIN1.csv',
+            '202304021800.CHRTOUT_DOMAIN1.csv',
+            '202304021900.CHRTOUT_DOMAIN1.csv',
+            '202304022000.CHRTOUT_DOMAIN1.csv',
+            '202304022100.CHRTOUT_DOMAIN1.csv',
+            '202304022200.CHRTOUT_DOMAIN1.csv',
+            '202304022300.CHRTOUT_DOMAIN1.csv'
+        ],
+        'nts': 288,
+        'final_timestamp': datetime(2023, 4, 2, 23, 0)
+    }]
+
+
+@pytest.fixture
+def nhd_qlat_data():
     return {
         "qlat_files": [
             "202108231400.CHRTOUT_DOMAIN1",
@@ -439,3 +474,34 @@ def nhd_test_network(nhd_test_files: Tuple[Path, Path]) -> Dict[str, Any]:
         "parity_parameters": parity_parameters,
         "data_assimilation_parameters": data_assimilation_parameters,
     }
+
+@pytest.fixture
+def hyfeatures_network_object(
+    hyfeatures_test_network: Dict[str, Any]
+) -> HYFeaturesNetwork:
+    cwd = Path.cwd()
+    path = hyfeatures_test_network["path"]
+    supernetwork_parameters = hyfeatures_test_network["supernetwork_parameters"]
+    waterbody_parameters = hyfeatures_test_network["waterbody_parameters"]
+    data_assimilation_parameters = hyfeatures_test_network["data_assimilation_parameters"]
+    restart_parameters = hyfeatures_test_network["restart_parameters"]
+    compute_parameters = hyfeatures_test_network["compute_parameters"]
+    forcing_parameters = hyfeatures_test_network["forcing_parameters"]
+    hybrid_parameters = hyfeatures_test_network["hybrid_parameters"]
+    preprocessing_parameters = hyfeatures_test_network["preprocessing_parameters"]
+    output_parameters = hyfeatures_test_network["output_parameters"]
+
+    os.chdir(path)
+    network = HYFeaturesNetwork(
+        supernetwork_parameters,
+        waterbody_parameters,
+        data_assimilation_parameters,
+        restart_parameters,
+        compute_parameters,
+        forcing_parameters,
+        hybrid_parameters,
+        preprocessing_parameters,
+        output_parameters
+    )
+    os.chdir(cwd)
+    return network

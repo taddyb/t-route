@@ -26,7 +26,7 @@ def test_nhd_preprocess(
     usace_lake_gage_crosswalk = nhd_built_test_network["usace_lake_gage_crosswalk"]
     link_lake_crosswalk = nhd_built_test_network["link_lake_crosswalk"]
 
-    run_sets = [qlat_data]
+    run_sets = [nhd_qlat_data]
     da_sets = [{"usgs_timeslice_files": []}]
 
     t0 = warmstart_nhd_test["t0"]
