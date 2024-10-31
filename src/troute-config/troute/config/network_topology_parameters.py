@@ -17,6 +17,7 @@ class NetworkTopologyParameters(BaseModel):
     # TODO: error in v3_doc.yaml; `rfc` is listed as network_topology_parameters parameter.
     # should instead be waterbody_parameters
 
+
 # TODO: This is an old parameter but probably worth keeping moving forward. However, it is
 # not implemented in V4 at the moment (Aug 11, 2023). Need to add this functionality to t-route.
 class PreprocessingParameters(BaseModel):
@@ -60,47 +61,47 @@ class SupernetworkParameters(BaseModel):
     # TODO: It would be nice if this were a literal / str
     driver_string: Union[str, Literal["NetCDF"]] = "NetCDF"
     layer_string: int = 0
-    
+
     @validator("columns", always=True)
     def get_columns(cls, columns: dict, values: Dict[str, Any]) -> dict:
         if columns is None:
-            if values['network_type']=="HYFeaturesNetwork":
+            if values["network_type"] == "HYFeaturesNetwork":
                 default_columns = {
-                    'key'       : 'id',
-                    'downstream': 'toid',
-                    'dx'        : 'length_m',
-                    'n'         : 'n',
-                    'ncc'       : 'nCC',
-                    's0'        : 'So',
-                    'bw'        : 'BtmWdth',
-                    'waterbody' : 'rl_NHDWaterbodyComID',
-                    'gages'     : 'rl_gages',
-                    'tw'        : 'TopWdth',
-                    'twcc'      : 'TopWdthCC',
-                    'musk'      : 'MusK',
-                    'musx'      : 'MusX',
-                    'cs'        : 'ChSlp',
-                    'alt'       : 'alt',
-                    'mainstem'  : 'mainstem',
-                    }
+                    "key": "id",
+                    "downstream": "toid",
+                    "dx": "length_m",
+                    "n": "n",
+                    "ncc": "nCC",
+                    "s0": "So",
+                    "bw": "BtmWdth",
+                    "waterbody": "rl_NHDWaterbodyComID",
+                    "gages": "rl_gages",
+                    "tw": "TopWdth",
+                    "twcc": "TopWdthCC",
+                    "musk": "MusK",
+                    "musx": "MusX",
+                    "cs": "ChSlp",
+                    "alt": "alt",
+                    "mainstem": "mainstem",
+                }
             else:
                 default_columns = {
-                    'key'       : 'link',
-                    'downstream': 'to',
-                    'dx'        : 'Length',
-                    'n'         : 'n',
-                    'ncc'       : 'nCC',
-                    's0'        : 'So',
-                    'bw'        : 'BtmWdth',
-                    'waterbody' : 'NHDWaterbodyComID',
-                    'gages'     : 'gages',
-                    'tw'        : 'TopWdth',
-                    'twcc'      : 'TopWdthCC',
-                    'alt'       : 'alt',
-                    'musk'      : 'MusK',
-                    'musx'      : 'MusX',
-                    'cs'        : 'ChSlp',
-                    }
+                    "key": "link",
+                    "downstream": "to",
+                    "dx": "Length",
+                    "n": "n",
+                    "ncc": "nCC",
+                    "s0": "So",
+                    "bw": "BtmWdth",
+                    "waterbody": "NHDWaterbodyComID",
+                    "gages": "gages",
+                    "tw": "TopWdth",
+                    "twcc": "TopWdthCC",
+                    "alt": "alt",
+                    "musk": "MusK",
+                    "musx": "MusX",
+                    "cs": "ChSlp",
+                }
         else:
             default_columns = columns
         return default_columns
@@ -108,33 +109,33 @@ class SupernetworkParameters(BaseModel):
 
 class Columns(BaseModel):
     # string, unique segment identifier
-    key: str 
+    key: str
     # string, unique identifier of downstream segment
-    downstream: str 
+    downstream: str
     # string, segment length
-    dx: str 
+    dx: str
     # string, manning's roughness of main channel
-    n: str 
+    n: str
     # string, mannings roughness of compound channel
-    ncc: str 
+    ncc: str
     # string, channel slope
-    s0: str 
+    s0: str
     # string, channel bottom width
-    bw: str 
+    bw: str
     # string, waterbody identifier
-    waterbody: Optional[str] 
+    waterbody: Optional[str]
     # string, channel top width
-    tw: str 
+    tw: str
     # string, compound channel top width
-    twcc: str 
+    twcc: str
     # string, channel bottom altitude
-    alt: Optional[str] 
+    alt: Optional[str]
     # string, muskingum K parameter
-    musk: str 
+    musk: str
     # string, muskingum X parameter
-    musx: str 
+    musx: str
     # string, channel sideslope
-    cs: str 
+    cs: str
     # string, gage ID
     gages: Optional[str]
     # string, mainstem ID
@@ -159,4 +160,3 @@ PreprocessingParameters.update_forward_refs()
 SupernetworkParameters.update_forward_refs()
 WaterbodyParameters.update_forward_refs()
 LevelPool.update_forward_refs()
-

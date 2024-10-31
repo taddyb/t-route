@@ -6,6 +6,7 @@
 Test v02 routing on specific test cases
 
 """
+
 ## Parallel execution
 import sys
 import time
@@ -40,9 +41,7 @@ def build_test_parameters(
     forcing_parameters,
     parity_parameters,
 ):
-
     if test_name == "pocono1":
-
         print("running test case for Pocono_TEST1 domain - NO RESERVOIRS")
 
         # File path to WRF Hydro data
@@ -97,12 +96,12 @@ def build_test_parameters(
         restart_parameters["wrf_hydro_channel_restart_file"] = wrf_hydro_restart_file
         restart_parameters["wrf_hydro_channel_ID_crosswalk_file"] = routelink_file
         restart_parameters["wrf_hydro_channel_ID_crosswalk_file_field_name"] = "link"
-        restart_parameters[
-            "wrf_hydro_channel_restart_upstream_flow_field_name"
-        ] = "qlink1"
-        restart_parameters[
-            "wrf_hydro_channel_restart_downstream_flow_field_name"
-        ] = "qlink2"
+        restart_parameters["wrf_hydro_channel_restart_upstream_flow_field_name"] = (
+            "qlink1"
+        )
+        restart_parameters["wrf_hydro_channel_restart_downstream_flow_field_name"] = (
+            "qlink2"
+        )
         restart_parameters["wrf_hydro_channel_restart_depth_flow_field_name"] = "hlink"
 
         # specify restart parameters

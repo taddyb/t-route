@@ -2,18 +2,20 @@ from pathlib import Path
 from typing import Dict, List
 
 
-def update_test_paths_with_prefix(data: Dict[str, str], prefix: Path, paths_to_update: List[List[str]]) -> Dict[str, str]:
+def update_test_paths_with_prefix(
+    data: Dict[str, str], prefix: Path, paths_to_update: List[List[str]]
+) -> Dict[str, str]:
     """Update specific paths inside of a config dictionary with the given prefix, if they exist.
-    
+
     Parameters:
     -----------
     data: Dict[str, str]
-        The data dictionary read from the yaml config 
+        The data dictionary read from the yaml config
     prefix: Path
         The path prefix we want to append
     paths_to_update: List[str]
         The list of paths to update from the config
-    
+
     Returns:
     --------
     Dict[str, str]

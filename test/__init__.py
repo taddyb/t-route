@@ -33,3 +33,14 @@ def temporarily_change_dir(path: Path):
     finally:
         if original_cwd != path:
             os.chdir(original_cwd)
+
+
+def find_cwd(path=None) -> Path:
+    if path is not None:
+        cwd = path
+    else:
+        cwd = Path.cwd()
+    if "test" in str(cwd):
+        while "test" in str(cwd):
+            cwd = cwd.parent
+    return cwd

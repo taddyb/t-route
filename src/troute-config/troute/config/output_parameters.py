@@ -5,7 +5,7 @@ from typing import Optional, List
 from typing_extensions import Annotated, Literal
 from .types import FilePath, DirectoryPath
 
-streamOutput_allowedTypes = Literal['.csv', '.nc', '.pkl']
+streamOutput_allowedTypes = Literal[".csv", ".nc", ".pkl"]
 
 
 class OutputParameters(BaseModel):
@@ -35,6 +35,7 @@ class OutputParameters(BaseModel):
     # NOTE: mandatory if writing results to lastobs
     lastobs_output: Optional[DirectoryPath] = None
 
+
 class ChanobsOutput(BaseModel):
     # NOTE: required if writing chanobs files
     chanobs_output_directory: Optional[DirectoryPath] = None
@@ -53,8 +54,8 @@ class ParquetOutput(BaseModel):
     # NOTE: required if writing results to parquet
     parquet_output_folder: Optional[DirectoryPath] = None
     parquet_output_segments: Optional[List[str]] = None
-    configuration: str = 'None'
-    prefix_ids: str = 'wb'
+    configuration: str = "None"
+    prefix_ids: str = "wb"
 
 
 class ChrtoutOutput(BaseModel):
@@ -96,33 +97,42 @@ class StreamOutput(BaseModel):
     stream_output_directory: Optional[Path] = None
     mask_output: Optional[FilePath] = None
     stream_output_time: int = 1
-    stream_output_type:streamOutput_allowedTypes = ".nc"
+    stream_output_type: streamOutput_allowedTypes = ".nc"
     stream_output_internal_frequency: Annotated[int, Field(strict=True, ge=5)] = 5
-    
-    @validator('stream_output_directory')
+
+    @validator("stream_output_directory")
     def validate_stream_output_directory(cls, value):
         if value is None:
             return None
-            
+
         # expand ~/output/dir -> /home/user/output/dir
         value = value.expanduser()
-        
+
         if value.exists() and not value.is_dir():
-            raise ValueError(f"'stream_output_directory'={value!s} is a file, expected directory.")
+            raise ValueError(
+                f"'stream_output_directory'={value!s} is a file, expected directory."
+            )
 
         # make directory (and intermediates) if they don't exist
         value.mkdir(parents=True, exist_ok=True)
         return value
-    
-    @validator('stream_output_internal_frequency')
+
+    @validator("stream_output_internal_frequency")
     def validate_stream_output_internal_frequency(cls, value, values):
         if value is not None:
             if value % 5 != 0:
-                raise ValueError("stream_output_internal_frequency must be a multiple of 5.")
-            if values.get('stream_output_time') != -1 and value / 60 > values['stream_output_time']:
-                raise ValueError("stream_output_internal_frequency should be less than or equal to stream_output_time in minutes.")
+                raise ValueError(
+                    "stream_output_internal_frequency must be a multiple of 5."
+                )
+            if (
+                values.get("stream_output_time") != -1
+                and value / 60 > values["stream_output_time"]
+            ):
+                raise ValueError(
+                    "stream_output_internal_frequency should be less than or equal to stream_output_time in minutes."
+                )
         return value
- 
+
 
 OutputParameters.update_forward_refs()
 WrfHydroParityCheck.update_forward_refs()

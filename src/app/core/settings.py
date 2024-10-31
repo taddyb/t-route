@@ -45,11 +45,29 @@ class Settings(BaseSettings):
         ["compute_parameters", "hybrid_parameters", "topobathy_domain"],
         ["compute_parameters", "hybrid_parameters", "coastal_boundary_domain"],
         ["compute_parameters", "forcing_parameters", "qlat_input_folder"],
-        ["compute_parameters", "data_assimilation_parameters", "usace_timeslices_folder"],
-        ["compute_parameters", "data_assimilation_parameters", "usgs_timeslices_folder"],
-        ["compute_parameters", "data_assimilation_parameters", "canada_timeslices_folder"],
+        [
+            "compute_parameters",
+            "data_assimilation_parameters",
+            "usace_timeslices_folder",
+        ],
+        [
+            "compute_parameters",
+            "data_assimilation_parameters",
+            "usgs_timeslices_folder",
+        ],
+        [
+            "compute_parameters",
+            "data_assimilation_parameters",
+            "canada_timeslices_folder",
+        ],
         ["compute_parameters", "data_assimilation_parameters", "LakeOntario_outflow"],
-        ["compute_parameters", "data_assimilation_parameters", "reservoir_da", "reservoir_rfc_da", "reservoir_rfc_forecasts_time_series_path"]
+        [
+            "compute_parameters",
+            "data_assimilation_parameters",
+            "reservoir_da",
+            "reservoir_rfc_da",
+            "reservoir_rfc_forecasts_time_series_path",
+        ],
     ]
     lower_colorado_paths_to_update: List[List[str]] = [
         ["network_topology_parameters", "supernetwork_parameters", "geo_file_path"],
@@ -57,9 +75,27 @@ class Settings(BaseSettings):
         ["compute_parameters", "hybrid_parameters", "topobathy_domain"],
         ["compute_parameters", "hybrid_parameters", "coastal_boundary_domain"],
         ["compute_parameters", "forcing_parameters", "qlat_input_folder"],
-        ["compute_parameters", "data_assimilation_parameters", "usace_timeslices_folder"],
-        ["compute_parameters", "data_assimilation_parameters", "usgs_timeslices_folder"],
-        ["compute_parameters", "data_assimilation_parameters", "canada_timeslices_folder"],
+        [
+            "compute_parameters",
+            "data_assimilation_parameters",
+            "usace_timeslices_folder",
+        ],
+        [
+            "compute_parameters",
+            "data_assimilation_parameters",
+            "usgs_timeslices_folder",
+        ],
+        [
+            "compute_parameters",
+            "data_assimilation_parameters",
+            "canada_timeslices_folder",
+        ],
         ["compute_parameters", "data_assimilation_parameters", "LakeOntario_outflow"],
-        ["compute_parameters", "data_assimilation_parameters", "reservoir_da", "reservoir_rfc_da", "reservoir_rfc_forecasts_time_series_path"]
+        [
+            "compute_parameters",
+            "data_assimilation_parameters",
+            "reservoir_da",
+            "reservoir_rfc_da",
+            "reservoir_rfc_forecasts_time_series_path",
+        ],
     ]

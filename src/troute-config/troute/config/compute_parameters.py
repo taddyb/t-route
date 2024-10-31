@@ -112,8 +112,8 @@ class StreamflowDA(BaseModel):
     gage_segID_crosswalk_file: Optional[FilePath] = None
 
     # TODO: not sure if these are dependent on anything
-    crosswalk_gage_field: Optional[str] = 'gages'
-    crosswalk_segID_field: Optional[str] = 'link'
+    crosswalk_gage_field: Optional[str] = "gages"
+    crosswalk_segID_field: Optional[str] = "link"
 
     # NOTE: required for analysis and
     # TODO: changed the name of this parameter from "wrf_hydro_lastobs_file" to "lastobs_file"
@@ -126,7 +126,7 @@ class StreamflowDA(BaseModel):
     diffusive_streamflow_nudging: bool = False
 
 
-class ReservoirPersistenceDA(BaseModel, extra='ignore'):
+class ReservoirPersistenceDA(BaseModel, extra="ignore"):
     # NOTE: mandatory for USGS reservoir DA, defaults to False
     reservoir_persistence_usgs: bool = False
     # NOTE: mandatory for USACE reservoir DA, defaults to False
@@ -160,7 +160,7 @@ class ReservoirDA(BaseModel):
     reservoir_parameter_file: Optional[FilePath] = None
 
 
-class DataAssimilationParameters(BaseModel, extra='ignore'):
+class DataAssimilationParameters(BaseModel, extra="ignore"):
     # NOTE: required for streamflow nudging and/or USGS reservoir DA
     usgs_timeslices_folder: Optional[DirectoryPath] = None
     # NOTE: required for USACE reservoir DA
@@ -209,7 +209,7 @@ class ForcingParameters(BaseModel):
     # max_loop_size variables are listed above.
     qlat_forcing_sets: Optional[List[QLateralForcingSet]] = None
 
-    # TODO: shorvath: We might be able to remove binary_nexus_file_folder. 
+    # TODO: shorvath: We might be able to remove binary_nexus_file_folder.
     # This converts ngen output .csv files into parquet files for t-route.
     binary_nexus_file_folder: Optional[DirectoryPath] = None
     coastal_boundary_input_file: Optional[FilePath] = None
@@ -218,8 +218,8 @@ class ForcingParameters(BaseModel):
     # in config: "*NEXOUT.parquet" "*NEXUS.csv", "nex-*"
     # TODO: shorvath: I belive we no longer use these two arguments...
     # need to double check.
-    #nexus_file_pattern_filter: Optional[str] = None
-    #nexus_input_folder: Optional[DirectoryPath] = None
+    # nexus_file_pattern_filter: Optional[str] = None
+    # nexus_input_folder: Optional[DirectoryPath] = None
 
 
 ComputeParameters.update_forward_refs()

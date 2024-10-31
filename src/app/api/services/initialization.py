@@ -137,7 +137,9 @@ def create_initial_start_file(params: Dict[str, str], settings: Settings) -> Pat
 
     gdf = gpd.read_file(params["geo_file_path"], layer="network")
     mask = gdf["divide_id"].isna()
-    keys = [int(val.split("-")[1]) for val in set(gdf[~mask]["divide_id"].values.tolist())]
+    keys = [
+        int(val.split("-")[1]) for val in set(gdf[~mask]["divide_id"].values.tolist())
+    ]
 
     discharge_upstream = np.zeros([len(keys)])
     discharge_downstream = np.zeros([len(keys)])

@@ -11,46 +11,51 @@ import pytest
 import yaml
 from nwm_routing.__main__ import _handle_args_v03
 from nwm_routing.input import _input_handler_v03, _input_handler_v04
-from nwm_routing.preprocess import (nwm_initial_warmstate_preprocess,
-                                    nwm_network_preprocess,
-                                    unpack_nwm_preprocess_data)
+from nwm_routing.preprocess import (
+    nwm_initial_warmstate_preprocess,
+    nwm_network_preprocess,
+    unpack_nwm_preprocess_data,
+)
 from troute.HYFeaturesNetwork import HYFeaturesNetwork
 from pydantic import ValidationError
 from troute.config import Config
+from test import temporarily_change_dir, find_cwd
 
 
 @pytest.fixture
 def hyfeature_qlat_data() -> List[Dict[str, Any]]:
-    return [{
-        'qlat_files': [
-            '202304020000.CHRTOUT_DOMAIN1.csv',
-            '202304020100.CHRTOUT_DOMAIN1.csv',
-            '202304020200.CHRTOUT_DOMAIN1.csv',
-            '202304020300.CHRTOUT_DOMAIN1.csv',
-            '202304020400.CHRTOUT_DOMAIN1.csv',
-            '202304020500.CHRTOUT_DOMAIN1.csv',
-            '202304020600.CHRTOUT_DOMAIN1.csv',
-            '202304020700.CHRTOUT_DOMAIN1.csv',
-            '202304020800.CHRTOUT_DOMAIN1.csv',
-            '202304020900.CHRTOUT_DOMAIN1.csv',
-            '202304021000.CHRTOUT_DOMAIN1.csv',
-            '202304021100.CHRTOUT_DOMAIN1.csv',
-            '202304021200.CHRTOUT_DOMAIN1.csv',
-            '202304021300.CHRTOUT_DOMAIN1.csv',
-            '202304021400.CHRTOUT_DOMAIN1.csv',
-            '202304021500.CHRTOUT_DOMAIN1.csv',
-            '202304021600.CHRTOUT_DOMAIN1.csv',
-            '202304021700.CHRTOUT_DOMAIN1.csv',
-            '202304021800.CHRTOUT_DOMAIN1.csv',
-            '202304021900.CHRTOUT_DOMAIN1.csv',
-            '202304022000.CHRTOUT_DOMAIN1.csv',
-            '202304022100.CHRTOUT_DOMAIN1.csv',
-            '202304022200.CHRTOUT_DOMAIN1.csv',
-            '202304022300.CHRTOUT_DOMAIN1.csv'
-        ],
-        'nts': 288,
-        'final_timestamp': datetime(2023, 4, 2, 23, 0)
-    }]
+    return [
+        {
+            "qlat_files": [
+                "202304020000.CHRTOUT_DOMAIN1.csv",
+                "202304020100.CHRTOUT_DOMAIN1.csv",
+                "202304020200.CHRTOUT_DOMAIN1.csv",
+                "202304020300.CHRTOUT_DOMAIN1.csv",
+                "202304020400.CHRTOUT_DOMAIN1.csv",
+                "202304020500.CHRTOUT_DOMAIN1.csv",
+                "202304020600.CHRTOUT_DOMAIN1.csv",
+                "202304020700.CHRTOUT_DOMAIN1.csv",
+                "202304020800.CHRTOUT_DOMAIN1.csv",
+                "202304020900.CHRTOUT_DOMAIN1.csv",
+                "202304021000.CHRTOUT_DOMAIN1.csv",
+                "202304021100.CHRTOUT_DOMAIN1.csv",
+                "202304021200.CHRTOUT_DOMAIN1.csv",
+                "202304021300.CHRTOUT_DOMAIN1.csv",
+                "202304021400.CHRTOUT_DOMAIN1.csv",
+                "202304021500.CHRTOUT_DOMAIN1.csv",
+                "202304021600.CHRTOUT_DOMAIN1.csv",
+                "202304021700.CHRTOUT_DOMAIN1.csv",
+                "202304021800.CHRTOUT_DOMAIN1.csv",
+                "202304021900.CHRTOUT_DOMAIN1.csv",
+                "202304022000.CHRTOUT_DOMAIN1.csv",
+                "202304022100.CHRTOUT_DOMAIN1.csv",
+                "202304022200.CHRTOUT_DOMAIN1.csv",
+                "202304022300.CHRTOUT_DOMAIN1.csv",
+            ],
+            "nts": 288,
+            "final_timestamp": datetime(2023, 4, 2, 23, 0),
+        }
+    ]
 
 
 @pytest.fixture
@@ -86,35 +91,37 @@ def nhd_qlat_data():
         "final_timestamp": datetime(2021, 8, 24, 13, 0),
     }
 
+
 @pytest.fixture
 def nhd_validation_files():
     files = [
-        '202108231400.CHRTOUT_DOMAIN1',
-        '202108231500.CHRTOUT_DOMAIN1',
-        '202108231600.CHRTOUT_DOMAIN1',
-        '202108231700.CHRTOUT_DOMAIN1',
-        '202108231800.CHRTOUT_DOMAIN1',
-        '202108231900.CHRTOUT_DOMAIN1',
-        '202108232000.CHRTOUT_DOMAIN1',
-        '202108232100.CHRTOUT_DOMAIN1',
-        '202108232200.CHRTOUT_DOMAIN1',
-        '202108232300.CHRTOUT_DOMAIN1',
-        '202108240000.CHRTOUT_DOMAIN1',
-        '202108240100.CHRTOUT_DOMAIN1',
-        '202108240200.CHRTOUT_DOMAIN1',
-        '202108240300.CHRTOUT_DOMAIN1',
-        '202108240400.CHRTOUT_DOMAIN1',
-        '202108240500.CHRTOUT_DOMAIN1',
-        '202108240600.CHRTOUT_DOMAIN1',
-        '202108240700.CHRTOUT_DOMAIN1',
-        '202108240800.CHRTOUT_DOMAIN1',
-        '202108240900.CHRTOUT_DOMAIN1',
-        '202108241000.CHRTOUT_DOMAIN1',
-        '202108241100.CHRTOUT_DOMAIN1',
-        '202108241200.CHRTOUT_DOMAIN1',
-        '202108241300.CHRTOUT_DOMAIN1'
+        "202108231400.CHRTOUT_DOMAIN1",
+        "202108231500.CHRTOUT_DOMAIN1",
+        "202108231600.CHRTOUT_DOMAIN1",
+        "202108231700.CHRTOUT_DOMAIN1",
+        "202108231800.CHRTOUT_DOMAIN1",
+        "202108231900.CHRTOUT_DOMAIN1",
+        "202108232000.CHRTOUT_DOMAIN1",
+        "202108232100.CHRTOUT_DOMAIN1",
+        "202108232200.CHRTOUT_DOMAIN1",
+        "202108232300.CHRTOUT_DOMAIN1",
+        "202108240000.CHRTOUT_DOMAIN1",
+        "202108240100.CHRTOUT_DOMAIN1",
+        "202108240200.CHRTOUT_DOMAIN1",
+        "202108240300.CHRTOUT_DOMAIN1",
+        "202108240400.CHRTOUT_DOMAIN1",
+        "202108240500.CHRTOUT_DOMAIN1",
+        "202108240600.CHRTOUT_DOMAIN1",
+        "202108240700.CHRTOUT_DOMAIN1",
+        "202108240800.CHRTOUT_DOMAIN1",
+        "202108240900.CHRTOUT_DOMAIN1",
+        "202108241000.CHRTOUT_DOMAIN1",
+        "202108241100.CHRTOUT_DOMAIN1",
+        "202108241200.CHRTOUT_DOMAIN1",
+        "202108241300.CHRTOUT_DOMAIN1",
     ]
-    return {'validation_files': files}
+    return {"validation_files": files}
+
 
 @pytest.fixture
 def nhd_built_test_network(nhd_test_network: Dict[str, Any]) -> Dict[str, Any]:
@@ -127,62 +134,60 @@ def nhd_built_test_network(nhd_test_network: Dict[str, Any]) -> Dict[str, Any]:
 
     # Build routing network data objects. Network data objects specify river
     # network connectivity, channel geometry, and waterbody parameters.
-    cwd = Path.cwd()
-    os.chdir(path)
-    if preprocessing_parameters.get("use_preprocessed_data", False):
-        # get data from pre-processed file
-        (
-            connections,
-            param_df,
-            wbody_conn,
-            waterbodies_df,
-            waterbody_types_df,
-            break_network_at_waterbodies,
-            waterbody_type_specified,
-            link_lake_crosswalk,
-            independent_networks,
-            reaches_bytw,
-            rconn,
-            link_gage_df,
-            usgs_lake_gage_crosswalk,
-            usace_lake_gage_crosswalk,
-            diffusive_network_data,
-            topobathy_df,
-            refactored_diffusive_domain,
-            refactored_reaches,
-            unrefactored_topobathy_df,
-        ) = unpack_nwm_preprocess_data(preprocessing_parameters)
-    else:
-        # build data objects from scratch
-        (
-            connections,
-            param_df,
-            wbody_conn,
-            waterbodies_df,
-            waterbody_types_df,
-            break_network_at_waterbodies,
-            waterbody_type_specified,
-            link_lake_crosswalk,
-            independent_networks,
-            reaches_bytw,
-            rconn,
-            link_gage_df,
-            usgs_lake_gage_crosswalk,
-            usace_lake_gage_crosswalk,
-            diffusive_network_data,
-            topobathy_df,
-            refactored_diffusive_domain,
-            refactored_reaches,
-            unrefactored_topobathy_df,
-        ) = nwm_network_preprocess(
-            supernetwork_parameters,
-            waterbody_parameters,
-            preprocessing_parameters,
-            compute_parameters,
-            data_assimilation_parameters,
-        )
+    with temporarily_change_dir(path):
+        if preprocessing_parameters.get("use_preprocessed_data", False):
+            # get data from pre-processed file
+            (
+                connections,
+                param_df,
+                wbody_conn,
+                waterbodies_df,
+                waterbody_types_df,
+                break_network_at_waterbodies,
+                waterbody_type_specified,
+                link_lake_crosswalk,
+                independent_networks,
+                reaches_bytw,
+                rconn,
+                link_gage_df,
+                usgs_lake_gage_crosswalk,
+                usace_lake_gage_crosswalk,
+                diffusive_network_data,
+                topobathy_df,
+                refactored_diffusive_domain,
+                refactored_reaches,
+                unrefactored_topobathy_df,
+            ) = unpack_nwm_preprocess_data(preprocessing_parameters)
+        else:
+            # build data objects from scratch
+            (
+                connections,
+                param_df,
+                wbody_conn,
+                waterbodies_df,
+                waterbody_types_df,
+                break_network_at_waterbodies,
+                waterbody_type_specified,
+                link_lake_crosswalk,
+                independent_networks,
+                reaches_bytw,
+                rconn,
+                link_gage_df,
+                usgs_lake_gage_crosswalk,
+                usace_lake_gage_crosswalk,
+                diffusive_network_data,
+                topobathy_df,
+                refactored_diffusive_domain,
+                refactored_reaches,
+                unrefactored_topobathy_df,
+            ) = nwm_network_preprocess(
+                supernetwork_parameters,
+                waterbody_parameters,
+                preprocessing_parameters,
+                compute_parameters,
+                data_assimilation_parameters,
+            )
 
-    os.chdir(cwd)
     return {
         "path": path,
         "connections": connections,
@@ -252,54 +257,20 @@ def warmstart_nhd_test(
     }
 
 
-@contextmanager
-def temporarily_change_dir(path: Path):
-    """Temporarily changes the current working directory
-
-    This context manager changes the current working directory to the specified path,
-    yields control back to the caller, and then changes back to the original directory
-    when exiting the context
-
-    Parameters
-    ----------
-    path : Path
-        The path to temporarily change the current working directory to
-
-    Yields
-    ------
-    None
-    """
-    original_cwd = Path.cwd()
-    if original_cwd != path:
-        os.chdir(path)
-    try:
-        yield
-    finally:
-        if original_cwd != path:
-            os.chdir(original_cwd)
-
-
 @pytest.fixture
-def nhd_test_files() -> Tuple[Path, Path]:
-    path = Path.cwd() / "test/LowerColorado_TX/"
-    if path.exists() is False:
-        print(Path.cwd())
-        if "test/LowerColorado_TX/" in Path.cwd().__str__():
-            path = Path.cwd()
-        elif "test" in Path.cwd().__str__():
-            path = Path.cwd() / "LowerColorado_TX/"
-        else:
-            raise AssertionError("Cannot find NHD test case")
+def nhd_test_files() -> Tuple[Path, Path, Path]:
+    cwd = find_cwd()
+    path = cwd / "test/LowerColorado_TX/"
     config = path / "test_AnA_V4_NHD.yaml"
-
-    return path, config
+    return cwd, path, config
 
 
 @pytest.fixture
-def hyfeatures_test_data() -> Tuple[Path, Path]:
-    path = Path.cwd() / "test/LowerColorado_TX_v4/"
+def hyfeatures_test_data() -> Tuple[Path, Path, Path]:
+    cwd = find_cwd()
+    path = cwd / "test/LowerColorado_TX_v4/"
     config = path / "test_AnA_V4_HYFeature_noDA.yaml"
-    return path, config
+    return cwd, path, config
 
 
 @pytest.fixture
@@ -366,7 +337,9 @@ def validated_config():
 
 
 @pytest.fixture
-def hyfeatures_test_network(hyfeatures_test_data: Tuple[Path, Path]) -> Dict[str, Any]:
+def hyfeatures_test_network(
+    hyfeatures_test_data: Tuple[Path, Path, Path],
+) -> Dict[str, Any]:
     """
     Creates a configuration dictionary for HYFeatures testing.
 
@@ -396,31 +369,28 @@ def hyfeatures_test_network(hyfeatures_test_data: Tuple[Path, Path]) -> Dict[str
         - parity_parameters: Parity check settings
         - data_assimilation_parameters: DA settings
     """
-    path, config = hyfeatures_test_data
+    cwd, path, config = hyfeatures_test_data
 
     args = _handle_args_v03(["-f", (path / config).__str__()])
 
-    cwd = Path.cwd()
-
     # Changing work dirs to validate the strict mode
-    os.chdir(path)
-    (
-        log_parameters,
-        preprocessing_parameters,
-        supernetwork_parameters,
-        waterbody_parameters,
-        compute_parameters,
-        forcing_parameters,
-        restart_parameters,
-        hybrid_parameters,
-        output_parameters,
-        parity_parameters,
-        data_assimilation_parameters,
-    ) = _input_handler_v04(args)
-
-    os.chdir(cwd)
+    with temporarily_change_dir(path):
+        (
+            log_parameters,
+            preprocessing_parameters,
+            supernetwork_parameters,
+            waterbody_parameters,
+            compute_parameters,
+            forcing_parameters,
+            restart_parameters,
+            hybrid_parameters,
+            output_parameters,
+            parity_parameters,
+            data_assimilation_parameters,
+        ) = _input_handler_v04(args)
 
     return {
+        "cwd": cwd,
         "path": path,
         "log_parameters": log_parameters,
         "preprocessing_parameters": preprocessing_parameters,
@@ -439,28 +409,27 @@ def hyfeatures_test_network(hyfeatures_test_data: Tuple[Path, Path]) -> Dict[str
 
 @pytest.fixture
 def nhd_test_network(nhd_test_files: Tuple[Path, Path]) -> Dict[str, Any]:
-    path, config = nhd_test_files
+    cwd, path, config = nhd_test_files
 
     args = _handle_args_v03(["-f", (path / config).__str__()])
 
-    cwd = Path.cwd()
-    os.chdir(path)
-    (
-        log_parameters,
-        preprocessing_parameters,
-        supernetwork_parameters,
-        waterbody_parameters,
-        compute_parameters,
-        forcing_parameters,
-        restart_parameters,
-        hybrid_parameters,
-        output_parameters,
-        parity_parameters,
-        data_assimilation_parameters,
-    ) = _input_handler_v03(args)
-    os.chdir(cwd)
+    with temporarily_change_dir(path):
+        (
+            log_parameters,
+            preprocessing_parameters,
+            supernetwork_parameters,
+            waterbody_parameters,
+            compute_parameters,
+            forcing_parameters,
+            restart_parameters,
+            hybrid_parameters,
+            output_parameters,
+            parity_parameters,
+            data_assimilation_parameters,
+        ) = _input_handler_v03(args)
 
     return {
+        "cwd": path,
         "path": path,
         "log_parameters": log_parameters,
         "preprocessing_parameters": preprocessing_parameters,
@@ -475,15 +444,17 @@ def nhd_test_network(nhd_test_files: Tuple[Path, Path]) -> Dict[str, Any]:
         "data_assimilation_parameters": data_assimilation_parameters,
     }
 
+
 @pytest.fixture
 def hyfeatures_network_object(
-    hyfeatures_test_network: Dict[str, Any]
+    hyfeatures_test_network: Dict[str, Any],
 ) -> HYFeaturesNetwork:
-    cwd = Path.cwd()
     path = hyfeatures_test_network["path"]
     supernetwork_parameters = hyfeatures_test_network["supernetwork_parameters"]
     waterbody_parameters = hyfeatures_test_network["waterbody_parameters"]
-    data_assimilation_parameters = hyfeatures_test_network["data_assimilation_parameters"]
+    data_assimilation_parameters = hyfeatures_test_network[
+        "data_assimilation_parameters"
+    ]
     restart_parameters = hyfeatures_test_network["restart_parameters"]
     compute_parameters = hyfeatures_test_network["compute_parameters"]
     forcing_parameters = hyfeatures_test_network["forcing_parameters"]
@@ -491,17 +462,16 @@ def hyfeatures_network_object(
     preprocessing_parameters = hyfeatures_test_network["preprocessing_parameters"]
     output_parameters = hyfeatures_test_network["output_parameters"]
 
-    os.chdir(path)
-    network = HYFeaturesNetwork(
-        supernetwork_parameters,
-        waterbody_parameters,
-        data_assimilation_parameters,
-        restart_parameters,
-        compute_parameters,
-        forcing_parameters,
-        hybrid_parameters,
-        preprocessing_parameters,
-        output_parameters
-    )
-    os.chdir(cwd)
+    with temporarily_change_dir(path):
+        network = HYFeaturesNetwork(
+            supernetwork_parameters,
+            waterbody_parameters,
+            data_assimilation_parameters,
+            restart_parameters,
+            compute_parameters,
+            forcing_parameters,
+            hybrid_parameters,
+            preprocessing_parameters,
+            output_parameters,
+        )
     return network

@@ -28,6 +28,7 @@ class TRouteStatus(BaseModel):
     feature_id : str
         The COMID, or hf_id, belonging to the point being routed
     """
+
     status_code: HttpStatusCode
     message: str
     lid: str
@@ -36,7 +37,7 @@ class TRouteStatus(BaseModel):
 
 class TestStatus(BaseModel):
     """A schema for output from t-route test cases
-    
+
     Attributes:
     -----------
     status_code: HttpStatusCode
@@ -44,5 +45,6 @@ class TestStatus(BaseModel):
     message: str
         The output message from T-Route
     """
+
     status_code: HttpStatusCode
     message: str

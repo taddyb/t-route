@@ -14,7 +14,10 @@ def config_files() -> List[Path]:
     files = list(ROOT_TEST_DIR.glob("*/*.yaml"))
     return files
 
-@pytest.mark.skip(reason="Deprecated and non-functional - config files have been updated")
+
+@pytest.mark.skip(
+    reason="Deprecated and non-functional - config files have been updated"
+)
 @pytest.mark.parametrize("file", config_files())
 def test_naive_deserialization(file: Path):
     data = yaml.load(file.read_text(), Loader=yaml.Loader)

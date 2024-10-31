@@ -9,8 +9,11 @@ from nwm_routing import main_v04 as t_route
 from pydantic import conint
 from troute.config import Config
 
-from app.api.services.initialization import (create_initial_start_file,
-                                             create_params, edit_yaml)
+from app.api.services.initialization import (
+    create_initial_start_file,
+    create_params,
+    edit_yaml,
+)
 from app.api.services.utils import update_test_paths_with_prefix
 from app.core import get_settings
 from app.core.settings import Settings
@@ -100,7 +103,9 @@ async def run_lower_colorado_tests(
         data = yaml.load(custom_file, Loader=yaml.SafeLoader)
 
     # Updating paths to work in docker
-    data = update_test_paths_with_prefix(data, path_to_test_dir, settings.lower_colorado_paths_to_update)
+    data = update_test_paths_with_prefix(
+        data, path_to_test_dir, settings.lower_colorado_paths_to_update
+    )
 
     troute_configuration = Config.with_strict_mode(**data)
 
@@ -109,9 +114,11 @@ async def run_lower_colorado_tests(
     dict_ = json.loads(troute_configuration.json())
 
     # converting timeslice back to string (Weird pydantic 1.10 workaround)
-    dict_["compute_parameters"]["restart_parameters"]["start_datetime"] = data["compute_parameters"]["restart_parameters"]["start_datetime"]
+    dict_["compute_parameters"]["restart_parameters"]["start_datetime"] = data[
+        "compute_parameters"
+    ]["restart_parameters"]["start_datetime"]
 
-    with open(tmp_yaml, 'w') as file:
+    with open(tmp_yaml, "w") as file:
         yaml.dump(dict_, file)
 
     try:
