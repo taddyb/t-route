@@ -2,12 +2,10 @@ from pathlib import Path
 
 import pytest
 from pydantic import BaseModel, ValidationError
-
 from troute.config._utils import use_strict
 from troute.config.types import DirectoryPath, FilePath
 
 
-@pytest.mark.skip(reason="Deprecated and non-functional")
 @pytest.mark.parametrize(
     "file,expected",
     (
@@ -23,7 +21,6 @@ def test_file_path(file, expected):
     assert o.file == expected
 
 
-@pytest.mark.skip(reason="Deprecated and non-functional")
 @pytest.mark.parametrize("file", (__file__, Path(__file__)))
 def test_file_path_use_strict(file):
     class Foo(BaseModel):
@@ -34,7 +31,6 @@ def test_file_path_use_strict(file):
         assert isinstance(o.file, Path)
 
 
-@pytest.mark.skip(reason="Deprecated and non-functional")
 @pytest.mark.parametrize("file", ("some_fake_file", Path("some_fake_file")))
 def test_file_path_use_strict_raises(file):
     assert not Path(file).exists(), "test expects file not to exist"
@@ -47,7 +43,6 @@ def test_file_path_use_strict_raises(file):
             Foo(file=file)
 
 
-@pytest.mark.skip(reason="Deprecated and non-functional")
 @pytest.mark.parametrize(
     "directory,expected",
     (
@@ -66,7 +61,6 @@ def test_directory_path(directory, expected):
 MOD_DIR = Path(__file__).parent
 
 
-@pytest.mark.skip(reason="Deprecated and non-functional")
 @pytest.mark.parametrize(
     "directory",
     (
@@ -84,7 +78,6 @@ def test_directory_path_use_strict(directory):
         Foo(dir=directory)
 
 
-@pytest.mark.skip(reason="Deprecated and non-functional")
 @pytest.mark.parametrize(
     "directory",
     (

@@ -124,6 +124,9 @@ def read_geopkg(file_path, compute_parameters, waterbody_parameters, cpu_pool):
 
     # Check if 'link' column exists and rename it to 'id'
     if "link" in flowpath_attributes_df.columns:
+        # v2.2 Hydrofabric files have both a link and an id in flowpath_attributes
+        if 'id' in flowpath_attributes_df.columns:
+            flowpath_attributes_df.drop(columns=['id'], inplace=True)
         flowpath_attributes_df.rename(columns={"link": "id"}, inplace=True)
 
     # Merge flowpaths and flowpath_attributes
@@ -433,7 +436,6 @@ class HYFeaturesNetwork(AbstractNetwork):
             #        musx: "MusX"
             #        cs: "ChSlp"  # TODO: rename to `sideslope`
             self._dataframe = self.dataframe.rename(columns=reverse_dict(cols))
-
         # Don't need the string prefix anymore, drop it
         mask = ~self.dataframe["downstream"].str.startswith("tnx")
         self._dataframe = self.dataframe.apply(numeric_id, axis=1)
@@ -504,21 +506,39 @@ class HYFeaturesNetwork(AbstractNetwork):
     def preprocess_waterbodies(self, lakes, nexus):
         # If waterbodies are being simulated, create waterbody dataframes and dictionaries
         if not lakes.empty:
-            self._waterbody_df = lakes[
-                [
-                    "hl_link",
-                    "ifd",
-                    "LkArea",
-                    "LkMxE",
-                    "OrificeA",
-                    "OrificeC",
-                    "OrificeE",
-                    "WeirC",
-                    "WeirE",
-                    "WeirL",
-                    "id",
+            try:
+                self._waterbody_df = lakes[
+                    [
+                        "lake_id",
+                        "ifd",
+                        "LkArea",
+                        "LkMxE",
+                        "OrificeA",
+                        "OrificeC",
+                        "OrificeE",
+                        "WeirC",
+                        "WeirE",
+                        "WeirL",
+                        "id",
+                    ]
                 ]
-            ].rename(columns={"hl_link": "lake_id"})
+            except KeyError:
+                # For older versions of the hydrofabric (v20.1) where hl_link is the main ID column
+                self._waterbody_df = lakes[
+                    [
+                        "hl_link",
+                        "ifd",
+                        "LkArea",
+                        "LkMxE",
+                        "OrificeA",
+                        "OrificeC",
+                        "OrificeE",
+                        "WeirC",
+                        "WeirE",
+                        "WeirL",
+                        "id",
+                    ]
+                ].rename(columns={"hl_link": "lake_id"})
 
             id = self.waterbody_dataframe["id"].str.split("-", expand=True).iloc[:, 1]
             self._waterbody_df["id"] = id
