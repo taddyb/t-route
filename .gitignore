@@ -93,3 +93,7 @@ doc/sphinx/build
 # PYTEST #
 ##########
 **/.pytest_cache
+
+# VSCODE #
+###########
+.vscode/
