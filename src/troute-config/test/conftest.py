@@ -15,7 +15,7 @@ def find_config_files() -> List[Path]:
         A list of Path objects pointing to each valid configuration
     """
     test_dir = Path(__file__).parents[1] / "test"
-    target_dirs = ["LowerColorado_TX", "LowerColorado_TX_v4", "unit_test_hyfeature"]
+    target_dirs = ["LowerColorado_TX", "LowerColorado_TX_v4", "LowerColorado_TX_HYFeatures_v22", "unit_test_hyfeature"]
     files = []
     for dir_name in target_dirs:
         files.extend(list((test_dir / dir_name).glob("*.yaml")))
