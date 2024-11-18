@@ -80,6 +80,7 @@ bower_components/
 .grunt/
 src/vendor/
 dist/
+<<<<<<< HEAD
 
 # SPHINX #
 ##########
@@ -97,3 +98,17 @@ doc/sphinx/build
 # VSCODE #
 ###########
 .vscode/
+
+# MISC #
+########
+data/ 
+output
+test_compose.yaml
+
+# ruff/pycache/pytest #
+#######################
+.*_cache
+
+# .venv #
+#########
+.venv

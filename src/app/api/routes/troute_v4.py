@@ -5,7 +5,7 @@ from typing import Annotated
 
 import yaml
 from fastapi import APIRouter, Depends, HTTPException
-from nwm_routing import main_v04 as t_route
+from nwm_routing.__main__ import main_v04 as t_route
 from pydantic import conint
 from troute.config import Config
 
