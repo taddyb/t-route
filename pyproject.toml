@@ -26,6 +26,8 @@ dependencies = [
     "pydantic<2",
 ]
 
+[project.optional-dependencies]
 test = [
     "pytest==8.3.2",
+    "bmipy==2.0.0",
 ]
