@@ -165,6 +165,8 @@ class DAforcing_model():
                 self._rfc_timeseries_df = _read_timeseries_files(
                     rfc_timeseries_path, timeseries_dates, start_datetime,
                     final_persist_datetime, routing_period=dt,
+                    unavailable_action=rfc_parameters.get(
+                        'reservoir_rfc_forecasts_unavailable_action', 'error'),
                 )
 
             # Lastobs

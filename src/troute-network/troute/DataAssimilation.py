@@ -1180,6 +1180,8 @@ class RFCDA(AbstractDA):
                 self._rfc_timeseries_df = _read_timeseries_files(
                     rfc_timeseries_path, timeseries_dates, start_datetime, final_persist_datetime,
                     routing_period=self._run_parameters.get('dt', 300),
+                    unavailable_action=rfc_parameters.get(
+                        'reservoir_rfc_forecasts_unavailable_action', 'error'),
                 )
                 self._reservoir_rfc_df, self._reservoir_rfc_param_df = assemble_rfc_dataframes(
                                                                                                 self._rfc_timeseries_df, 
@@ -2304,8 +2306,21 @@ def _rfc_timeseries_qcqa(discharge,stationId,synthetic,totalCounts,timestamp,tim
     return rfc_df, rfc_param_df
 
 
+def _rfc_unavailable(msg, action, error=ValueError):
+    """Raise or warn, by policy, when a forecast a reservoir needs is not usable.
+
+    ``error`` ends the run: enabling RFC DA asserts the forecasts are provisioned.
+    ``level_pool`` lets the affected reservoirs run as level pool, so one late gage
+    does not break an operational chain of runs.
+    """
+    if action == 'level_pool':
+        LOG.warning("%s Running level pool there instead.", msg)
+        return
+    raise error(msg)
+
+
 def _read_timeseries_files(filepath, timeseries_dates, t0, final_persist_datetime,
-                           routing_period=300):
+                           routing_period=300, unavailable_action='error'):
     """Newest RFC forecast per gage that actually covers t0, as one long frame.
 
     Newest-first but coverage-gated: the newest issue has the latest slice start, so
@@ -2329,7 +2344,6 @@ def _read_timeseries_files(filepath, timeseries_dates, t0, final_persist_datetim
     df = pd.DataFrame([f.name.split('.') for f in files], columns=['Datetime','dt','ID','rfc','ext'])
     df = df[df['Datetime'].isin(timeseries_dates)][['ID','Datetime','dt']]
     if df.empty:
-        # Fatal by policy: enabling RFC DA claims the forecasts are provisioned.
         msg = (
             f"reservoir RFC DA is enabled but no RFC timeseries file in {filepath} "
             f"is dated within the lookback window {timeseries_dates[0]} to "
@@ -2337,7 +2351,8 @@ def _read_timeseries_files(filepath, timeseries_dates, t0, final_persist_datetim
             "forecasts covering the simulation period, or turn off "
             "reservoir_da.reservoir_rfc_da.reservoir_rfc_forecasts."
         )
-        raise FileNotFoundError(msg)
+        _rfc_unavailable(msg, unavailable_action, FileNotFoundError)
+        return pd.DataFrame()
     df['Datetime'] = df['Datetime'].apply(lambda _: datetime.strptime(_, '%Y-%m-%d_%H'))
 
     rfc_df = pd.DataFrame()
@@ -2358,7 +2373,8 @@ def _read_timeseries_files(filepath, timeseries_dates, t0, final_persist_datetim
                 "forecasts covering the simulation period, or turn off "
                 "reservoir_da.reservoir_rfc_da.reservoir_rfc_forecasts."
             )
-            raise ValueError(msg)
+            _rfc_unavailable(msg, unavailable_action)
+            continue
         f, record = chosen
         # t0 in the untruncated series; the truncation below only trims the tail.
         timeseries_idx = record.datetimes.get_loc(t0)
@@ -2395,6 +2411,7 @@ def _read_timeseries_files(filepath, timeseries_dates, t0, final_persist_datetim
     return rfc_df
 
 def assemble_rfc_dataframes(rfc_timeseries_df, rfc_lake_gage_crosswalk, t0, rfc_parameters):
+    action = rfc_parameters.get('reservoir_rfc_forecasts_unavailable_action', 'error')
     # Retrieve rfc timeseries dataframe from BMI dictionary
     rfc_df = rfc_timeseries_df
     if rfc_df.empty:
@@ -2405,7 +2422,8 @@ def assemble_rfc_dataframes(rfc_timeseries_df, rfc_lake_gage_crosswalk, t0, rfc_
             "covering the simulation period, or turn off "
             "reservoir_da.reservoir_rfc_da.reservoir_rfc_forecasts."
         )
-        raise ValueError(msg)
+        _rfc_unavailable(msg, action)
+        return pd.DataFrame(), pd.DataFrame()
     # Create reservoir_rfc_df dataframe of observations, rows are locations and columns are dates.
     reservoir_rfc_df = rfc_df[['stationId','discharges','Datetime']].sort_values(['stationId','Datetime']).pivot(index='stationId',columns='Datetime').fillna(-999.0)
     reservoir_rfc_df.columns = reservoir_rfc_df.columns.droplevel()
@@ -2438,7 +2456,8 @@ def assemble_rfc_dataframes(rfc_timeseries_df, rfc_lake_gage_crosswalk, t0, rfc_
             "covering the simulation period, or turn off "
             "reservoir_da.reservoir_rfc_da.reservoir_rfc_forecasts."
         )
-        raise ValueError(msg)
+        _rfc_unavailable(msg, action)
+        return pd.DataFrame(), pd.DataFrame()
     cadences = set(reservoir_rfc_param_df['da_timestep'].dropna().astype(int))
     if len(cadences) > 1:
         msg = (
@@ -2456,6 +2475,28 @@ def assemble_rfc_dataframes(rfc_timeseries_df, rfc_lake_gage_crosswalk, t0, rfc_
     # Fill in NaNs with default values.
     # Assign back, not df[col].fillna(inplace=True): pandas 3 copies the
     # intermediate and the fill would stop reaching the frame.
+    # Two states share this shape: a lake with no gage at all can never have a
+    # forecast, while a gage with no usable file follows the availability policy.
+    unmatched = reservoir_rfc_param_df.index[reservoir_rfc_param_df['use_rfc'].isna()]
+    gageless = set(
+        rfc_lake_gage_crosswalk.index[rfc_lake_gage_crosswalk['rfc_gage_id'].isna()]
+    )
+    no_gage = sorted(set(unmatched) & gageless)
+    no_data = sorted(set(unmatched) - gageless)
+    if no_gage:
+        LOG.warning(
+            "reservoir RFC DA: %d RFC reservoir(s) have no gage in the hydrofabric, so "
+            "no forecast can exist for them; they run level pool. Lake id(s): %s",
+            len(no_gage), no_gage[:10],
+        )
+    if no_data:
+        msg = (
+            f"reservoir RFC DA: {len(no_data)} of {len(reservoir_rfc_param_df)} RFC "
+            f"reservoir(s) have a gage but no usable forecast. Lake id(s): "
+            f"{no_data[:10]}. Provide forecasts covering the simulation period, or turn "
+            "off reservoir_da.reservoir_rfc_da.reservoir_rfc_forecasts."
+        )
+        _rfc_unavailable(msg, action)
     reservoir_rfc_param_df['use_rfc'] = reservoir_rfc_param_df['use_rfc'].fillna(False)
     reservoir_rfc_param_df['totalCounts'] = reservoir_rfc_param_df['totalCounts'].fillna(0)
     reservoir_rfc_param_df['da_timestep'] = reservoir_rfc_param_df['da_timestep'].fillna(0)
