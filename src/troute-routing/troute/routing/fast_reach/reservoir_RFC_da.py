@@ -30,6 +30,11 @@ class RFCTimeSeries(NamedTuple):
 
 
 _FILENAME_CADENCE = re.compile(r"\.(\d+)min\.")
+# The production RFC ingestion naming: <issue>.<cadence>min.<gage>.RFCTimeSeries.ncdf.
+# Matched with fullmatch, since `$` would also accept a trailing newline.
+_RFC_FILENAME = re.compile(
+    r"\d{4}-\d{2}-\d{2}_\d{2}\.\d+min\.[^.]+\.RFCTimeSeries\.ncdf"
+)
 
 # Producers disagree: "seconds" from one, "hours" from the NHF generator.
 # Unlabeled files are seconds.

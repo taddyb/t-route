@@ -6,14 +6,17 @@ import xarray as xr
 from datetime import datetime, timedelta
 from abc import ABC
 from joblib import delayed, Parallel
-import glob
 import re
 import time
 import logging
 
 LOG = logging.getLogger("TROUTE")
 
-from troute.routing.fast_reach.reservoir_RFC_da import _validate_RFC_data, read_rfc_timeseries
+from troute.routing.fast_reach.reservoir_RFC_da import (
+    _RFC_FILENAME,
+    _validate_RFC_data,
+    read_rfc_timeseries,
+)
 
 from troute.network import bmi_array2df as a2df
 
@@ -2304,9 +2307,20 @@ def _read_timeseries_files(filepath, timeseries_dates, t0, final_persist_datetim
     """
     # Search for most recent RFC timseries file based on offset hours and lookback window
     # for each location.
-    files = glob.glob(filepath + '/*')
+    # Names are split on '.' into a fixed five fields, so anything the ingestion did not
+    # write (a leftover .gz, a directory) has to be dropped before the split.
+    files, ignored = [], []
+    for f in sorted(pathlib.Path(filepath).glob('*')):
+        keep = f.is_file() and _RFC_FILENAME.fullmatch(f.name)
+        (files if keep else ignored).append(f)
+    if ignored:
+        LOG.warning(
+            "reservoir RFC DA: ignoring %d file(s) in %s that are not named "
+            "<issue>.<cadence>min.<gage>.RFCTimeSeries.ncdf, e.g. %s",
+            len(ignored), filepath, ignored[0].name,
+        )
     # create temporary dataframe with file names, split up by location and datetime
-    df = pd.DataFrame([f.split('/')[-1].split('.') for f in files], columns=['Datetime','dt','ID','rfc','ext'])
+    df = pd.DataFrame([f.name.split('.') for f in files], columns=['Datetime','dt','ID','rfc','ext'])
     df = df[df['Datetime'].isin(timeseries_dates)][['ID','Datetime','dt']]
     if df.empty:
         # Fatal by policy: enabling RFC DA claims the forecasts are provisioned.
