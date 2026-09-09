@@ -74,7 +74,15 @@ def read_rfc_timeseries(path: str) -> RFCTimeSeries:
         slice_start = datetime.datetime.strptime(
             str(ds.attrs["sliceStartTimeUTC"]), "%Y-%m-%d_%H:%M:%S"
         )
-        attr_minutes = int(ds.attrs["sliceTimeResolutionMinutes"])
+        declared = float(ds.attrs["sliceTimeResolutionMinutes"])
+        if not declared.is_integer():
+            msg = (
+                f"reservoir RFC DA: {name} declares a {declared} min cadence. Cadences "
+                "are whole minutes; a fractional one would be truncated and read at the "
+                "wrong rate."
+            )
+            raise ValueError(msg)
+        attr_minutes = int(declared)
         raw_id = _pick("stationId")
         discharges = _pick("discharges").astype(np.float64).ravel()
         synthetic = _pick("synthetic_values").astype(np.float64).ravel()
@@ -113,6 +121,15 @@ def read_rfc_timeseries(path: str) -> RFCTimeSeries:
             f"{name_minutes} min, sliceTimeResolutionMinutes says {attr_minutes} min, "
             f"timeSteps says {step_seconds} s. The forecast index advances one step per "
             "cadence, so reading it from the wrong place assimilates at the wrong rate."
+        )
+        raise ValueError(msg)
+    if 60 % attr_minutes:
+        # The ingestion's rule (RFCHelper.makeAllTimeSeries). A cadence that divides 60
+        # puts a sample on every hour, which is what lets an hourly run line up with it.
+        msg = (
+            f"reservoir RFC DA: {name} has a {attr_minutes} min cadence, which does not "
+            "divide 60. The forecast retrieval only writes cadences that divide 60 with "
+            "no remainder, and a run can only align with one that does."
         )
         raise ValueError(msg)
 

@@ -1,3 +1,4 @@
+import math
 import troute.nhd_io as nhd_io
 import pandas as pd
 import numpy as np
@@ -2109,8 +2110,9 @@ def _timeslice_qcqa(discharge,
         observation_df_T.index, format = "%Y-%m-%d_%H:%M:%S"  # index variable as type datetime
     )
     
-    # specify resampling frequency 
-    frequency = str(int(frequency_secs/60))+"min"    
+    # Seconds, not truncated minutes: truncation puts a dt that is not whole minutes
+    # on the wrong grid, and any dt under 60 s on no grid at all.
+    frequency = f"{int(frequency_secs)}s"
     
     # interpolate and resample frequency
     buffer_df = observation_df_T.resample(frequency).asfreq()
@@ -2146,10 +2148,14 @@ def _timeslice_qcqa(discharge,
     return observation_df_new
 
 def _interpolate_one(df, interpolation_limit, frequency):
-    
-    interp_out = (df.resample('min').
+
+    # Interpolate on the finest grid the minute-based limit and the target step share,
+    # so a target that is not whole minutes still gets values rather than NaN.
+    step_seconds = int(pd.Timedelta(frequency).total_seconds())
+    base_seconds = math.gcd(60, step_seconds) or 60
+    interp_out = (df.resample(f'{base_seconds}s').
                         interpolate(
-                            limit = interpolation_limit, 
+                            limit = interpolation_limit * (60 // base_seconds),
                             limit_direction = 'both'
                         ).
                         resample(frequency).
