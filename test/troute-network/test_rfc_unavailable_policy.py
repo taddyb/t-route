@@ -143,7 +143,7 @@ def _frame(gage: str, t0: pd.Timestamp) -> pd.DataFrame:
     return pd.DataFrame({
         "stationId": gage, "discharges": [1.0, 2.0, 3.0, 4.0], "Datetime": dates,
         "totalCounts": 4, "timeseries_idx": 0, "file": "f", "use_rfc": True,
-        "da_timestep": 3600,
+        "da_timestep": 3600, "issue_time": t0,
     })
 
 

@@ -1271,12 +1271,11 @@ def _prep_reservoir_da_dataframes(reservoir_usgs_df,
         # Seconds left of the horizon at this window's start: the kernel's clock is
         # window-local, so a whole-horizon duration would re-arm every window.
         if 'persist_until' not in reservoir_rfc_param_df:
-            # This knows only the window t0, so it cannot rebuild the deadline;
-            # load_state repairs a restored frame.
+            # Derived from the forecast's issue time, which only the assembler sees.
             msg = (
                 "reservoir RFC DA: the parameter frame carries no persist_until, so the "
-                "persistence horizon cannot be anchored to the run start. Rebuild the "
-                "reservoir DA state rather than restoring one written before it existed."
+                "persistence horizon cannot be measured. Rebuild the reservoir DA state "
+                "rather than restoring one written before it existed."
             )
             raise ValueError(msg)
         reservoir_rfc_persist_seconds = (

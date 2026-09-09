@@ -2407,6 +2407,7 @@ def _read_timeseries_files(filepath, timeseries_dates, t0, final_persist_datetim
             da_time_step=record.timestep_seconds,
         )
         one['da_timestep'] = record.timestep_seconds
+        one['issue_time'] = record.issue_time
         rfc_df = pd.concat([rfc_df, one])
     return rfc_df
 
@@ -2436,7 +2437,16 @@ def assemble_rfc_dataframes(rfc_timeseries_df, rfc_lake_gage_crosswalk, t0, rfc_
                         set_index('rfc_lake_id')
                         )
     # Create reservoir_rfc_df dataframe of parameters
-    reservoir_rfc_param_df = rfc_df[['stationId','totalCounts','timeseries_idx','file','use_rfc','da_timestep']].drop_duplicates().set_index('stationId')
+    if 'issue_time' not in rfc_df:
+        # The horizon is measured from the forecast's issue, so a caller that
+        # transports observations without it cannot be given one.
+        msg = (
+            "reservoir RFC DA: the RFC observations carry no issue time, so the "
+            "persistence horizon cannot be anchored to the forecast. Read the "
+            "forecasts from files, or transport issueTimeUTC alongside them."
+        )
+        raise ValueError(msg)
+    reservoir_rfc_param_df = rfc_df[['stationId','totalCounts','timeseries_idx','file','use_rfc','da_timestep','issue_time']].drop_duplicates().set_index('stationId')
     reservoir_rfc_param_df = (
                             rfc_lake_gage_crosswalk.
                             reset_index().
@@ -2506,10 +2516,13 @@ def assemble_rfc_dataframes(rfc_timeseries_df, rfc_lake_gage_crosswalk, t0, rfc_
     # Seeded at t0, so the first advance is one cadence out, as the standalone does.
     reservoir_rfc_param_df['update_time'] = reservoir_rfc_param_df['da_timestep']
     persist_days = rfc_parameters.get('reservoir_rfc_forecast_persist_days', 11)
-    reservoir_rfc_param_df['rfc_persist_days'] = persist_days
-    # Absolute, fixed at the run's t0: the kernel's clock is window-local. The packer
-    # turns this into seconds remaining.
-    reservoir_rfc_param_df['persist_until'] = t0 + timedelta(days=persist_days)
+    # Measured from the forecast's own issue, not the run's t0, so the horizon says how
+    # long a product may be used rather than how long this run has been going. A cycle
+    # that adopts a newer issue gets a new allowance; one riding an old issue does not.
+    # The packer turns this into seconds remaining at each window.
+    reservoir_rfc_param_df['persist_until'] = (
+        reservoir_rfc_param_df['issue_time'] + timedelta(days=persist_days)
+    )
 
     return reservoir_rfc_df, reservoir_rfc_param_df
 

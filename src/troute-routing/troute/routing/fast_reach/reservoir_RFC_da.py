@@ -27,6 +27,7 @@ class RFCTimeSeries(NamedTuple):
     total_counts: int
     observed_counts: int
     timestep_seconds: int
+    issue_time: pd.Timestamp
 
 
 _FILENAME_CADENCE = re.compile(r"\.(\d+)min\.")
@@ -83,6 +84,15 @@ def read_rfc_timeseries(path: str) -> RFCTimeSeries:
             )
             raise ValueError(msg)
         attr_minutes = int(declared)
+        # The forecast's own age, which is what the persistence horizon is measured
+        # from. Read from the same series as the discharges: a file can hold several.
+        raw_issue = _pick("issueTimeUTC").ravel()[0]
+        issue_text = (
+            raw_issue.decode("utf-8") if isinstance(raw_issue, bytes) else str(raw_issue)
+        ).strip()
+        issue_time = pd.Timestamp(
+            datetime.datetime.strptime(issue_text, "%Y-%m-%d_%H:%M:%S")
+        )
         raw_id = _pick("stationId")
         discharges = _pick("discharges").astype(np.float64).ravel()
         synthetic = _pick("synthetic_values").astype(np.float64).ravel()
@@ -141,6 +151,7 @@ def read_rfc_timeseries(path: str) -> RFCTimeSeries:
         total_counts=total_counts,
         observed_counts=observed_counts,
         timestep_seconds=attr_minutes * 60,
+        issue_time=issue_time,
     )
 
 

@@ -478,13 +478,17 @@ def test_load_state_keeps_this_cycles_rfc_selection():
     )
 
 
-def test_load_state_carries_the_rfc_horizon_deadline_forward():
-    """The one absolute field: re-deriving it would re-arm the horizon every cycle."""
+def test_load_state_does_not_carry_the_rfc_horizon_deadline():
+    """The horizon is measured from the forecast's issue, so every cycle derives it.
+
+    Carrying a checkpoint's deadline would deny a newly adopted forecast its own
+    allowance, and re-arm an old one that should have expired.
+    """
     model = _make_model(0.0, _ExecutionPlanLike())
     da = model._data_assimilation
+    fresh = pd.Timestamp("2020-01-12")
     da._reservoir_rfc_param_df = pd.DataFrame(
-        {"timeseries_idx": [5], "persist_until": [pd.Timestamp("2020-01-12")]},
-        index=[101],
+        {"timeseries_idx": [5], "persist_until": [fresh]}, index=[101]
     )
     state = {
         "time": 0.0, "q0": pd.DataFrame({"q": [1.0]}), "seeded_q0": None,
@@ -498,28 +502,10 @@ def test_load_state_carries_the_rfc_horizon_deadline_forward():
     }
     model.load_state(state)
     out = model._data_assimilation._reservoir_rfc_param_df
-    assert out.loc[101, "timeseries_idx"] == 5              # this cycle's
-    assert out.loc[101, "persist_until"] == pd.Timestamp("2020-01-08")   # carried
+    assert out.loc[101, "timeseries_idx"] == 5
+    assert out.loc[101, "persist_until"] == fresh
 
 
-def test_a_lake_absent_from_the_checkpoint_keeps_its_fresh_deadline():
-    """A lake entering mid-chain has no carried deadline, and must not get NaT."""
-    model = _make_model(0.0, _ExecutionPlanLike())
-    fresh = pd.Timestamp("2020-01-12")
-    model._data_assimilation._reservoir_rfc_param_df = pd.DataFrame(
-        {"persist_until": [fresh, fresh]}, index=[101, 202]
-    )
-    state = {
-        "time": 0.0, "q0": pd.DataFrame({"q": [1.0]}), "seeded_q0": None,
-        "t0": "2020-01-01_00:00:00", "last_obs": pd.DataFrame(),
-        "usgs": pd.DataFrame(), "usace": pd.DataFrame(), "usbr": pd.DataFrame(),
-        "rfc": pd.DataFrame({"persist_until": [pd.Timestamp("2020-01-08")]}, index=[101]),
-        "gl": pd.DataFrame(), "scaling_tau": None,
-    }
-    model.load_state(state)
-    out = model._data_assimilation._reservoir_rfc_param_df
-    assert out.loc[101, "persist_until"] == pd.Timestamp("2020-01-08")
-    assert out.loc[202, "persist_until"] == fresh
 
 
 def test_load_state_rejects_a_no_da_checkpoint_after_routing():

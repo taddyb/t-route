@@ -51,6 +51,7 @@ def test_forecast_span_missing_t0_names_both_spans():
             "file": "f",
             "use_rfc": True,
             "da_timestep": 3600,
+            "issue_time": _T0,
         }
     )
     with pytest.raises(ValueError, match="do not cover the simulation start"):
@@ -69,6 +70,7 @@ def test_covering_forecast_still_assembles():
             "file": "f",
             "use_rfc": True,
             "da_timestep": 3600,
+            "issue_time": _T0,
         }
     )
     obs, params = assemble_rfc_dataframes(rfc_df, _CROSSWALK, _T0, _PARAMS)

@@ -205,6 +205,12 @@ def test_only_the_newest_series_is_read(tmp_path):
         ds.createVariable("stationId", "S1", ("stationIdStrLen",))[:] = np.array(
             list("KNFC1"), dtype="S1"
         )
+        # Per series, like the discharges: the horizon is measured from this.
+        ds.createDimension("timeStrLen", 19)
+        issued = ds.createVariable("issueTimeUTC", "S1", ("nseries", "timeStrLen"))
+        issued[:] = np.array(
+            [list("2021-10-20_12:00:00"), list("2021-10-21_12:00:00")], dtype="S1"
+        )
         ds.sliceStartTimeUTC = "2021-10-20_12:00:00"
         ds.sliceTimeResolutionMinutes = "60"
         ds.newest_forecast = "1"
@@ -238,6 +244,7 @@ def test_mixed_cadences_in_one_assembly_are_refused():
             "file": "f",
             "use_rfc": True,
             "da_timestep": cadence,
+            "issue_time": t0,
         }))
     crosswalk = pd.DataFrame(
         {"rfc_gage_id": ["HOURL", "QUART"], "rfc_lake_id": [1, 2]}

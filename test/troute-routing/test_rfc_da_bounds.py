@@ -84,6 +84,7 @@ def test_the_last_assembled_observation_is_still_assimilated():
             "file": "f",
             "use_rfc": True,
             "da_timestep": 3600,
+            "issue_time": t0,
         }
     )
     crosswalk = pd.DataFrame(

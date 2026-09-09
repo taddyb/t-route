@@ -39,6 +39,9 @@ def _frames(persist_days: float, hours: int = 48):
         "file": "f",
         "use_rfc": True,
         "da_timestep": _CADENCE,
+        # Issued at t0, so a horizon measured from the issue lands where these
+        # cases expect it.
+        "issue_time": pd.Timestamp(_T0),
     })
     crosswalk = pd.DataFrame(
         {"rfc_gage_id": [_GAGE], "rfc_lake_id": [_LAKE]}
@@ -164,22 +167,3 @@ def test_a_state_without_the_deadline_is_refused():
         )
 
 
-def test_a_restored_legacy_state_is_anchored_once(caplog):
-    """load_state knows the run start, so it repairs what the packer cannot."""
-    import logging
-
-    from troute_nwm_bmi.troute_model import Model
-
-    _, params = _frames(persist_days=2.0)
-    legacy = params.drop(columns=["persist_until"])
-    model = object.__new__(Model)
-    model._orig_t0 = _T0
-    with caplog.at_level(logging.WARNING, logger="TROUTE"):
-        repaired = model._anchor_rfc_deadline(legacy)
-    assert repaired["persist_until"].iloc[0] == pd.Timestamp(_T0) + timedelta(days=2)
-    assert "predates the persistence deadline" in caplog.text
-    # A frame that already carries the deadline is returned untouched.
-    caplog.clear()
-    with caplog.at_level(logging.WARNING, logger="TROUTE"):
-        assert model._anchor_rfc_deadline(params) is params
-    assert caplog.text == ""

@@ -47,8 +47,11 @@ _WB_COLS = ["LkArea", "LkMxE", "OrificeA", "OrificeC", "OrificeE",
 
 
 def _rfc_frames(persist_days: float):
-    stamps, d = [], _T0
-    while d <= _T0 + timedelta(hours=28):
+    # Backward from t0, so the selected issue is the one in hand when the run starts.
+    # An offset window reaches forward and can pick an issue dated after t0, which
+    # carries its own later horizon.
+    stamps, d = [], _T0 - timedelta(hours=28)
+    while d <= _T0:
         stamps.append(d.strftime("%Y-%m-%d_%H"))
         d += timedelta(hours=1)
     raw = _read_timeseries_files(
@@ -157,7 +160,9 @@ def test_chunked_run_matches_continuous_through_the_kernel(window_hours, method,
         method=method, cpu_pool=cpu_pool,
     )
     assert np.array_equal(continuous, chunked)
-    # The horizon really ends: assimilated flow on day 1, level pool on day 2.
+    # The horizon really ends: assimilated flow on day 1, level pool on day 2. The
+    # selected issue is dated t0, so a horizon measured from it lands a day in.
+    assert _rfc_frames(1)[1]["issue_time"].iloc[0] == pd.Timestamp(_T0)
     assert continuous[:_STEPS_PER_DAY].max() > 10.0
     assert continuous[_STEPS_PER_DAY:].max() < 1.0
 
