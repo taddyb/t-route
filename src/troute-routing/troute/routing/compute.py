@@ -1301,9 +1301,11 @@ def _prep_reservoir_da_dataframes(reservoir_usgs_df,
             gl_wbodies_sub = list(set(gl_wbodies_sub).difference(set(exclude_segments)))
         _require_reservoir_da_params(great_lakes_param_df, gl_wbodies_sub, "Great Lakes")
         gl_df_sub = great_lakes_df[great_lakes_df['lake_id'].isin(gl_wbodies_sub)]
-        gl_climatology_df_sub = great_lakes_climatology_df.loc[gl_wbodies_sub]
         gl_param_df_sub = great_lakes_param_df[great_lakes_param_df['lake_id'].isin(gl_wbodies_sub)]
         gl_parm_lake_id_sub = gl_param_df_sub.lake_id.to_numpy()
+        # Ordered by the parameter frame: the kernel locates a lake there and reads the
+        # climatology at that same position, so the two orders must match.
+        gl_climatology_df_sub = great_lakes_climatology_df.loc[gl_parm_lake_id_sub]
         gl_param_flows_sub = gl_param_df_sub.previous_assimilated_outflows.to_numpy()
         gl_param_time_sub = gl_param_df_sub.previous_assimilated_time.to_numpy()
         gl_param_update_time_sub = gl_param_df_sub.update_time.to_numpy()
