@@ -429,17 +429,49 @@ def test_load_state_still_installs_real_reservoir_da_params():
     pd.testing.assert_frame_equal(da._reservoir_rfc_param_df, live_rfc)
 
 
+def test_a_checkpoint_with_fewer_gages_does_not_shrink_the_roster(caplog):
+    """Downstream the lastobs index picks the roster, so a narrow checkpoint would
+    quietly stop assimilating the gages it never saw."""
+    import logging
+
+    model = _make_model(0.0, _ExecutionPlanLike())
+    da = model._data_assimilation
+    da._last_obs_df = pd.DataFrame(
+        {"time_since_lastobs": [0.0, 0.0, 0.0], "lastobs_discharge": [1.0, 2.0, 3.0]},
+        index=[30, 50, 70],
+    )
+    saved = pd.DataFrame(
+        {"time_since_lastobs": [9.0, 9.0], "lastobs_discharge": [8.0, 8.0]},
+        index=[50, 30],
+    )
+    state = {
+        "time": 0.0, "q0": pd.DataFrame({"q": [1.0]}), "seeded_q0": None,
+        "t0": "2020-01-01_00:00:00", "last_obs": saved,
+        "usgs": pd.DataFrame(), "usace": pd.DataFrame(), "usbr": pd.DataFrame(),
+        "rfc": pd.DataFrame(), "gl": pd.DataFrame(), "scaling_tau": None,
+    }
+    with caplog.at_level(logging.WARNING):
+        model.load_state(state)
+    out = model._data_assimilation._last_obs_df
+    assert set(out.index) == {30, 50, 70}
+    # The checkpoint's history is kept where it had any.
+    assert out.loc[30, "lastobs_discharge"] == 8.0
+    # The gage it never saw starts with no history, which is the kernel's own default.
+    assert pd.isna(out.loc[70, "lastobs_discharge"])
+    assert "carries no last observations for 1 gage(s)" in caplog.text
+
+
 def test_load_state_keeps_this_cycles_rfc_selection():
     """A checkpoint's cursor indexes the grid its own cycle built, not this one's."""
     model = _make_model(0.0, _ExecutionPlanLike())
     live_rfc = model._data_assimilation._reservoir_rfc_param_df.copy()
-    state = dict(
-        time=0.0, q0=pd.DataFrame({"q": [1.0]}), seeded_q0=None,
-        t0="2020-01-01_00:00:00", last_obs=pd.DataFrame(),
-        usgs=pd.DataFrame(), usace=pd.DataFrame(), usbr=pd.DataFrame(),
-        rfc=pd.DataFrame({"timeseries_idx": [72], "totalCounts": [99]}),
-        gl=pd.DataFrame(), scaling_tau=None,
-    )
+    state = {
+        "time": 0.0, "q0": pd.DataFrame({"q": [1.0]}), "seeded_q0": None,
+        "t0": "2020-01-01_00:00:00", "last_obs": pd.DataFrame(),
+        "usgs": pd.DataFrame(), "usace": pd.DataFrame(), "usbr": pd.DataFrame(),
+        "rfc": pd.DataFrame({"timeseries_idx": [72], "totalCounts": [99]}),
+        "gl": pd.DataFrame(), "scaling_tau": None,
+    }
     model.load_state(state)
     pd.testing.assert_frame_equal(
         model._data_assimilation._reservoir_rfc_param_df, live_rfc
@@ -454,16 +486,16 @@ def test_load_state_carries_the_rfc_horizon_deadline_forward():
         {"timeseries_idx": [5], "persist_until": [pd.Timestamp("2020-01-12")]},
         index=[101],
     )
-    state = dict(
-        time=0.0, q0=pd.DataFrame({"q": [1.0]}), seeded_q0=None,
-        t0="2020-01-01_00:00:00", last_obs=pd.DataFrame(),
-        usgs=pd.DataFrame(), usace=pd.DataFrame(), usbr=pd.DataFrame(),
-        rfc=pd.DataFrame(
+    state = {
+        "time": 0.0, "q0": pd.DataFrame({"q": [1.0]}), "seeded_q0": None,
+        "t0": "2020-01-01_00:00:00", "last_obs": pd.DataFrame(),
+        "usgs": pd.DataFrame(), "usace": pd.DataFrame(), "usbr": pd.DataFrame(),
+        "rfc": pd.DataFrame(
             {"timeseries_idx": [72], "persist_until": [pd.Timestamp("2020-01-08")]},
             index=[101],
         ),
-        gl=pd.DataFrame(), scaling_tau=None,
-    )
+        "gl": pd.DataFrame(), "scaling_tau": None,
+    }
     model.load_state(state)
     out = model._data_assimilation._reservoir_rfc_param_df
     assert out.loc[101, "timeseries_idx"] == 5              # this cycle's
@@ -477,13 +509,13 @@ def test_a_lake_absent_from_the_checkpoint_keeps_its_fresh_deadline():
     model._data_assimilation._reservoir_rfc_param_df = pd.DataFrame(
         {"persist_until": [fresh, fresh]}, index=[101, 202]
     )
-    state = dict(
-        time=0.0, q0=pd.DataFrame({"q": [1.0]}), seeded_q0=None,
-        t0="2020-01-01_00:00:00", last_obs=pd.DataFrame(),
-        usgs=pd.DataFrame(), usace=pd.DataFrame(), usbr=pd.DataFrame(),
-        rfc=pd.DataFrame({"persist_until": [pd.Timestamp("2020-01-08")]}, index=[101]),
-        gl=pd.DataFrame(), scaling_tau=None,
-    )
+    state = {
+        "time": 0.0, "q0": pd.DataFrame({"q": [1.0]}), "seeded_q0": None,
+        "t0": "2020-01-01_00:00:00", "last_obs": pd.DataFrame(),
+        "usgs": pd.DataFrame(), "usace": pd.DataFrame(), "usbr": pd.DataFrame(),
+        "rfc": pd.DataFrame({"persist_until": [pd.Timestamp("2020-01-08")]}, index=[101]),
+        "gl": pd.DataFrame(), "scaling_tau": None,
+    }
     model.load_state(state)
     out = model._data_assimilation._reservoir_rfc_param_df
     assert out.loc[101, "persist_until"] == pd.Timestamp("2020-01-08")

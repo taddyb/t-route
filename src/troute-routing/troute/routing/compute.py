@@ -1008,7 +1008,8 @@ def _prep_da_dataframes(
     # NOTE: Uncomment to easily test no observations...
     # usgs_df = pd.DataFrame()
     if not usgs_df.empty and not lastobs_df.empty:
-        # index values for last obs are not correct, but line up correctly with usgs values. Switched
+        # The lastobs index selects the roster: a gage with observations but no
+        # lastobs row is not assimilated. Both frames are then taken by label.
         lastobs_segs = (lastobs_df.index.
                         intersection(subnet_segs).
                         to_list()
@@ -1021,7 +1022,9 @@ def _prep_da_dataframes(
                     )
         lookup = {v: i for i, v in enumerate(param_df_sub_idx)}
         da_positions_list_byseg = np.array([lookup.get(seg, -1) for seg in usgs_segs])
-        usgs_df_sub = usgs_df.loc[usgs_segs]
+        # reindex, not .loc: the roster comes from lastobs, so a gage with history but
+        # no report this window belongs here with no observation, which the decay expects.
+        usgs_df_sub = usgs_df.reindex(usgs_segs)
     elif usgs_df.empty and not lastobs_df.empty:
         lastobs_segs = (lastobs_df.index.
                         intersection(subnet_segs).

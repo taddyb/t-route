@@ -612,6 +612,36 @@ class Model:
             "gl": bool(persistence.get("reservoir_persistence_greatLake", False)),
         }
 
+    def _restore_lastobs_frame(
+        self, restored: pd.DataFrame | None, live: pd.DataFrame
+    ) -> pd.DataFrame | None:
+        """Let the checkpoint supply history, never decide which gages have any.
+
+        Downstream the roster comes from the lastobs index, so a checkpoint written
+        with fewer gages than this run has quietly stops assimilating the difference.
+        A gage the checkpoint never saw has no history, which is what the kernel's
+        NaN initial value already means.
+        """
+        if restored is None or restored.empty:
+            return restored
+        # A run started without a lastobs file has no live frame to compare against,
+        # but its observations still name the gages it assimilates.
+        roster = live.index if live is not None and not live.empty else getattr(
+            getattr(self, "_data_assimilation", None), "_usgs_df", pd.DataFrame()
+        ).index
+        if not len(roster):
+            return restored
+        missing = roster.difference(restored.index)
+        if not len(missing):
+            return restored
+        LOG.warning(
+            "load_state: the checkpoint carries no last observations for %d gage(s) "
+            "this run assimilates; they start with no history rather than being "
+            "dropped. Gage(s): %s",
+            len(missing), sorted(missing)[:10],
+        )
+        return restored.reindex(restored.index.union(roster))
+
     def _compatible_lastobs(self, frame: pd.DataFrame) -> pd.DataFrame:
         """Drop lastobs rows this run does not assimilate.
 
@@ -745,9 +775,10 @@ class Model:
         # lastobs gets the reservoir treatment too: time_since_lastobs is relative,
         # so carrying a stale frame hands the next run day-old obs as current.
         resolved = {
-            "last_obs": restore(
-                data["last_obs"], da._last_obs_df, "last observations",
-                live_on=self._owns_lastobs()),
+            "last_obs": self._restore_lastobs_frame(
+                restore(data["last_obs"], da._last_obs_df, "last observations",
+                        live_on=self._owns_lastobs()),
+                da._last_obs_df),
             "usgs": restore_reservoir(
                 "usgs", data["usgs"], da._reservoir_usgs_param_df,
                 "USGS reservoir DA parameters"),
