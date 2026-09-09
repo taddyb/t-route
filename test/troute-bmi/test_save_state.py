@@ -398,7 +398,12 @@ def test_load_state_does_not_erase_live_reservoir_da_params():
 
 
 def test_load_state_still_installs_real_reservoir_da_params():
-    """The guard must not block the ordinary case: a populated saved frame wins."""
+    """The guard must not block the ordinary case: a populated saved frame wins.
+
+    RFC is the exception, and has its own test below: its parameters describe the
+    observation grid this cycle built, so a checkpoint's copy cannot be installed
+    over them.
+    """
     model = _make_model(0.0, _ExecutionPlanLike())
     saved_rfc = pd.DataFrame({"totalCounts": [99]})
     state = {
@@ -414,10 +419,75 @@ def test_load_state_still_installs_real_reservoir_da_params():
         "gl": pd.DataFrame({"d": [44]}),
         "scaling_tau": None,
     }
+    live_rfc = model._data_assimilation._reservoir_rfc_param_df.copy()
+    model.load_state(state)
+    da = model._data_assimilation
+    pd.testing.assert_frame_equal(da._reservoir_usgs_param_df, state["usgs"])
+    pd.testing.assert_frame_equal(da._reservoir_usace_param_df, state["usace"])
+    pd.testing.assert_frame_equal(da._great_lakes_param_df, state["gl"])
+    # RFC keeps what this cycle selected.
+    pd.testing.assert_frame_equal(da._reservoir_rfc_param_df, live_rfc)
+
+
+def test_load_state_keeps_this_cycles_rfc_selection():
+    """A checkpoint's cursor indexes the grid its own cycle built, not this one's."""
+    model = _make_model(0.0, _ExecutionPlanLike())
+    live_rfc = model._data_assimilation._reservoir_rfc_param_df.copy()
+    state = dict(
+        time=0.0, q0=pd.DataFrame({"q": [1.0]}), seeded_q0=None,
+        t0="2020-01-01_00:00:00", last_obs=pd.DataFrame(),
+        usgs=pd.DataFrame(), usace=pd.DataFrame(), usbr=pd.DataFrame(),
+        rfc=pd.DataFrame({"timeseries_idx": [72], "totalCounts": [99]}),
+        gl=pd.DataFrame(), scaling_tau=None,
+    )
     model.load_state(state)
     pd.testing.assert_frame_equal(
-        model._data_assimilation._reservoir_rfc_param_df, saved_rfc
+        model._data_assimilation._reservoir_rfc_param_df, live_rfc
     )
+
+
+def test_load_state_carries_the_rfc_horizon_deadline_forward():
+    """The one absolute field: re-deriving it would re-arm the horizon every cycle."""
+    model = _make_model(0.0, _ExecutionPlanLike())
+    da = model._data_assimilation
+    da._reservoir_rfc_param_df = pd.DataFrame(
+        {"timeseries_idx": [5], "persist_until": [pd.Timestamp("2020-01-12")]},
+        index=[101],
+    )
+    state = dict(
+        time=0.0, q0=pd.DataFrame({"q": [1.0]}), seeded_q0=None,
+        t0="2020-01-01_00:00:00", last_obs=pd.DataFrame(),
+        usgs=pd.DataFrame(), usace=pd.DataFrame(), usbr=pd.DataFrame(),
+        rfc=pd.DataFrame(
+            {"timeseries_idx": [72], "persist_until": [pd.Timestamp("2020-01-08")]},
+            index=[101],
+        ),
+        gl=pd.DataFrame(), scaling_tau=None,
+    )
+    model.load_state(state)
+    out = model._data_assimilation._reservoir_rfc_param_df
+    assert out.loc[101, "timeseries_idx"] == 5              # this cycle's
+    assert out.loc[101, "persist_until"] == pd.Timestamp("2020-01-08")   # carried
+
+
+def test_a_lake_absent_from_the_checkpoint_keeps_its_fresh_deadline():
+    """A lake entering mid-chain has no carried deadline, and must not get NaT."""
+    model = _make_model(0.0, _ExecutionPlanLike())
+    fresh = pd.Timestamp("2020-01-12")
+    model._data_assimilation._reservoir_rfc_param_df = pd.DataFrame(
+        {"persist_until": [fresh, fresh]}, index=[101, 202]
+    )
+    state = dict(
+        time=0.0, q0=pd.DataFrame({"q": [1.0]}), seeded_q0=None,
+        t0="2020-01-01_00:00:00", last_obs=pd.DataFrame(),
+        usgs=pd.DataFrame(), usace=pd.DataFrame(), usbr=pd.DataFrame(),
+        rfc=pd.DataFrame({"persist_until": [pd.Timestamp("2020-01-08")]}, index=[101]),
+        gl=pd.DataFrame(), scaling_tau=None,
+    )
+    model.load_state(state)
+    out = model._data_assimilation._reservoir_rfc_param_df
+    assert out.loc[101, "persist_until"] == pd.Timestamp("2020-01-08")
+    assert out.loc[202, "persist_until"] == fresh
 
 
 def test_load_state_rejects_a_no_da_checkpoint_after_routing():

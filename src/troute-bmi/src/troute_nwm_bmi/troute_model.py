@@ -696,6 +696,34 @@ class Model:
         )
         return live
 
+    def _restore_rfc_frame(
+        self,
+        saved: pd.DataFrame | None,
+        live: pd.DataFrame,
+        *,
+        advanced: bool,
+        live_on: bool | None,
+    ) -> pd.DataFrame:
+        """Keep this cycle's RFC selection, carrying only the horizon deadline forward.
+
+        Every other RFC parameter describes the observation grid built from the files
+        this cycle selected, and the checkpoint's copy describes whichever grid the
+        previous cycle built. `persist_until` is the exception: it is an absolute
+        instant, and re-deriving it each cycle would re-arm the horizon every time.
+        """
+        if live_on is False or live.empty or saved is None or saved.empty:
+            return self._restore_da_frame(
+                saved, live, "RFC reservoir DA parameters",
+                advanced=advanced, live_on=live_on,
+            )
+        restored = live.copy()
+        if "persist_until" in saved and "persist_until" in restored:
+            carried = saved["persist_until"].reindex(restored.index)
+            restored["persist_until"] = carried.where(
+                carried.notna(), restored["persist_until"]
+            )
+        return restored
+
     def load_state(self, data: dict):
         # Whether the live DA frames still describe the checkpoint's time. Not
         # `self._time`, which load_state overwrites and reset_time zeroes.
@@ -726,9 +754,9 @@ class Model:
             "usace": restore_reservoir(
                 "usace", data["usace"], da._reservoir_usace_param_df,
                 "USACE reservoir DA parameters"),
-            "rfc": restore_reservoir(
-                "rfc", data["rfc"], da._reservoir_rfc_param_df,
-                "RFC reservoir DA parameters"),
+            "rfc": self._restore_rfc_frame(
+                data["rfc"], da._reservoir_rfc_param_df,
+                advanced=advanced, live_on=live_on["rfc"]),
             "gl": restore_reservoir(
                 "gl", data["gl"], da._great_lakes_param_df,
                 "Great Lakes DA parameters"),
