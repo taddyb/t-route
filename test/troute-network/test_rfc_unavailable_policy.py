@@ -289,3 +289,26 @@ def test_a_forecast_issued_after_t0_reports_a_negative_age(caplog):
         assemble_rfc_dataframes(frame, _crosswalk(["A1"]), t0,
                                 {**_WITH_WINDOW, "reservoir_rfc_forecasts_offset_hours": 28})
     assert "-3 to -3 h old" in _summaries(caplog)[0]
+
+
+def test_an_empty_window_is_reported_once(caplog):
+    """The reader names the folder and window; the summary counts the reservoirs.
+
+    Saying it a third time at assembly tells an operator nothing new.
+    """
+    t0 = _t0()
+    with caplog.at_level(logging.INFO):
+        obs, _ = assemble_rfc_dataframes(
+            pd.DataFrame(), _crosswalk(["A1"]), t0,
+            {**_WITH_WINDOW, "reservoir_rfc_forecasts_unavailable_action": "level_pool"},
+        )
+    assert obs.empty
+    warnings = [r for r in caplog.records if r.levelno == logging.WARNING]
+    assert warnings == []
+    assert len(_summaries(caplog)) == 1
+
+
+def test_an_empty_frame_is_still_fatal_by_default():
+    """Suppressing the duplicate must not soften the policy."""
+    with pytest.raises(ValueError, match="no RFC timeseries observations"):
+        assemble_rfc_dataframes(pd.DataFrame(), _crosswalk(["A1"]), _t0(), _WITH_WINDOW)

@@ -2309,15 +2309,17 @@ def _rfc_timeseries_qcqa(discharge,stationId,synthetic,totalCounts,timestamp,tim
     return rfc_df, rfc_param_df
 
 
-def _rfc_unavailable(msg, action, error=ValueError):
+def _rfc_unavailable(msg, action, error=ValueError, warn=True):
     """Raise or warn, by policy, when a forecast a reservoir needs is not usable.
 
     ``error`` ends the run: enabling RFC DA asserts the forecasts are provisioned.
     ``level_pool`` lets the affected reservoirs run as level pool, so one late gage
-    does not break an operational chain of runs.
+    does not break an operational chain of runs. ``warn`` is False where the
+    per-run summary already reports the same state.
     """
     if action == 'level_pool':
-        LOG.warning("%s Running level pool there instead.", msg)
+        if warn:
+            LOG.warning("%s Running level pool there instead.", msg)
         return
     raise error(msg)
 
@@ -2439,7 +2441,9 @@ def assemble_rfc_dataframes(rfc_timeseries_df, rfc_lake_gage_crosswalk, t0, rfc_
             "covering the simulation period, or turn off "
             "reservoir_da.reservoir_rfc_da.reservoir_rfc_forecasts."
         )
-        _rfc_unavailable(msg, action)
+        # The reader has already named the folder and the window it searched, and the
+        # summary below says the same thing with counts, so warning here says it twice.
+        _rfc_unavailable(msg, action, warn=False)
         _report_rfc_selection(None, t0, rfc_parameters, rfc_lake_gage_crosswalk)
         return pd.DataFrame(), pd.DataFrame()
     # Create reservoir_rfc_df dataframe of observations, rows are locations and columns are dates.
