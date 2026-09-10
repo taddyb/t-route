@@ -15,7 +15,7 @@ import pytest
 import yaml
 
 from troute.config import Config
-from troute.DataAssimilation import _read_timeseries_files
+from troute.DataAssimilation import _read_timeseries_files, assemble_rfc_dataframes
 
 _CONFIGS = sorted((Path(__file__).parent.parent / "troute_prod_configs").glob("*.yaml"))
 _FIXTURE = next(
@@ -125,17 +125,61 @@ def test_production_settings_select_the_issue_in_hand(path, tmp_path):
 
 # ------------------------------------------------------------------ the horizon
 
-@pytest.mark.parametrize("path", _CONFIGS, ids=_IDS)
-def test_the_horizon_is_only_reachable_in_the_long_configurations(path):
-    """``persist_days`` can only act on a run long enough to reach it.
+def _deadline(cfg: dict, issue_age_hours: float, t0: pd.Timestamp) -> pd.Timestamp:
+    """The deadline the assembler derives, driven through the assembler itself."""
+    rfc = _rfc(cfg)
+    stamps = pd.date_range(t0, periods=4, freq="h")
+    frame = pd.DataFrame({
+        "stationId": "A1", "discharges": [1.0, 2.0, 3.0, 4.0], "Datetime": stamps,
+        "totalCounts": 4, "timeseries_idx": 0, "file": "f", "use_rfc": True,
+        "da_timestep": 3600, "issue_time": t0 - timedelta(hours=issue_age_hours),
+    })
+    crosswalk = pd.DataFrame(
+        {"rfc_gage_id": ["A1"], "rfc_lake_id": [101]}
+    ).set_index("rfc_lake_id")
+    _, params = assemble_rfc_dataframes(frame, crosswalk, t0, rfc)
+    return params.loc[101, "persist_until"]
 
-    At 11 days it is inert in the analysis and short range configurations and live in
-    long range, which is where a change to the horizon's meaning is observable.
+
+@pytest.mark.parametrize("path", _CONFIGS, ids=_IDS)
+def test_a_fresh_issue_puts_the_horizon_where_the_run_length_decides(path):
+    """With an issue dated t0 the allowance is the full persist_days.
+
+    At 11 days that is inert in the analysis and short range configurations and live
+    in long range, which is where the horizon is observable at all.
     """
     cfg = _load(path)
-    horizon_hours = _rfc(cfg)["reservoir_rfc_forecast_persist_days"] * 24
-    reached = _run_hours(cfg) > horizon_hours
+    t0 = pd.Timestamp("2026-07-13 12:00")
+    reached = (_deadline(cfg, 0, t0) - t0).total_seconds() / 3600 < _run_hours(cfg)
     assert reached == ("lr" in path.stem)
+
+
+@pytest.mark.parametrize("path", _CONFIGS, ids=_IDS)
+def test_an_older_issue_moves_the_horizon_earlier_by_its_age(path):
+    """The horizon follows the forecast, so a stale issue expires sooner.
+
+    This is what a run-anchored deadline could not express, and the reason the medium
+    range run is nearer the edge than its length alone suggests.
+    """
+    cfg = _load(path)
+    t0 = pd.Timestamp("2026-07-13 12:00")
+    fresh, stale = _deadline(cfg, 0, t0), _deadline(cfg, 28, t0)
+    assert (fresh - stale) == timedelta(hours=28)
+
+
+def test_the_medium_range_run_outlives_a_stale_issue():
+    """239 h of routing against 264 h of allowance looks safe until the issue is old.
+
+    At the lookback edge the forecast expires about three hours before the run ends,
+    so medium range is not as far from the horizon as its length suggests.
+    """
+    mrb = next(p for p in _CONFIGS if "mrb" in p.stem)
+    cfg = _load(mrb)
+    t0 = pd.Timestamp("2026-07-13 12:00")
+    lookback = _rfc(cfg)["reservoir_rfc_forecasts_lookback_hours"]
+    left = (_deadline(cfg, lookback, t0) - t0).total_seconds() / 3600
+    assert left < _run_hours(cfg)
+    assert _run_hours(cfg) - left == pytest.approx(3)
 
 
 def test_the_run_lengths_are_the_nwm_configurations():

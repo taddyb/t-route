@@ -126,9 +126,9 @@ def test_cadence_must_agree_exactly(tmp_path):
 def test_only_the_forecast_window_is_validated(tmp_path, spoil, expected_use_rfc):
     """A ruined observed history is not a bad forecast.
 
-    The series starts hours before t0 and the kernel only reads forward from t0, so
-    missing values back there say nothing about the forecast. Validating the whole
-    series let the history decide whether the reservoir assimilated at all.
+    Whether there is anything to assimilate is a question about the forecast, so the
+    missing values behind t0 must not answer it. An ABSURD value behind t0 is a
+    different matter and has its own test: the kernel can walk back into one.
     """
     dst = tmp_path / _FIXTURE.name
     shutil.copy(_FIXTURE, dst)
@@ -254,3 +254,28 @@ def test_mixed_cadences_in_one_assembly_are_refused():
             pd.concat(frames, ignore_index=True), crosswalk, t0,
             {"reservoir_rfc_forecast_persist_days": 11},
         )
+
+
+def test_an_absurd_discharge_behind_t0_disqualifies_the_forecast(tmp_path, caplog):
+    """The backtrack reads backward from the cursor, so history is reachable.
+
+    When the sample at the cursor is unusable ``reservoir_RFC_da`` walks down through
+    the earlier samples, which means a value the forward-window check never saw can
+    still land on the reservoir.
+    """
+    import logging
+
+    from troute.routing.fast_reach.reservoir_RFC_da import ABSURD_DISCHARGE_CMS
+
+    dst = tmp_path / _FIXTURE.name
+    shutil.copy(_FIXTURE, dst)
+    with netCDF4.Dataset(str(dst), "a") as ds:
+        values = ds.variables["discharges"][:]
+        values[0, 5] = ABSURD_DISCHARGE_CMS + 10_000  # well behind t0 at index 24
+        ds.variables["discharges"][:] = values
+    with caplog.at_level(logging.WARNING):
+        out = _read_timeseries_files(
+            str(tmp_path), _window(_T0), _T0, _T0 + timedelta(days=11)
+        )
+    assert bool(out["use_rfc"].iloc[0]) is False
+    assert "before t0" in caplog.text

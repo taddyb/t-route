@@ -646,22 +646,43 @@ def test_a_disabled_run_does_not_launder_stale_reservoir_params():
 def test_an_enabled_run_with_no_observations_yet_still_takes_the_checkpoint():
     """The symmetric case: empty live does NOT mean the type is off.
 
-    A run with RFC DA on that has not seen an observation in this window has an empty
-    live frame and legitimately needs the checkpoint's persistence. Distinguishing it
-    from the disabled run above is exactly what the recorded flags are for.
+    A persistence type with DA on that has not seen an observation in this window has
+    an empty live frame and legitimately needs the checkpoint's state. Distinguishing
+    it from the disabled run above is exactly what the recorded flags are for. RFC is
+    the exception and has its own test below: its parameters are derived per cycle.
     """
     run_a = _make_model(3600.0, _ExecutionPlanLike())
-    saved = pd.DataFrame({"totalCounts": [12], "update_time": [3600]})
-    run_a._data_assimilation._reservoir_rfc_param_df = saved
+    saved = pd.DataFrame({"prev_persisted_outflow": [12.0], "update_time": [3600]})
+    run_a._data_assimilation._reservoir_usgs_param_df = saved
     state = _state_from(run_a)
-    assert state["reservoir_da_enabled"]["rfc"] is True
+    assert state["reservoir_da_enabled"]["usgs"] is True
 
-    run_b = _make_model(0.0, _ExecutionPlanLike())  # RFC on
-    run_b._data_assimilation._reservoir_rfc_param_df = pd.DataFrame()  # nothing yet
+    run_b = _make_model(0.0, _ExecutionPlanLike())
+    run_b._data_assimilation._reservoir_usgs_param_df = pd.DataFrame()  # nothing yet
     run_b.load_state(state)
     pd.testing.assert_frame_equal(
-        run_b._data_assimilation._reservoir_rfc_param_df, saved
+        run_b._data_assimilation._reservoir_usgs_param_df, saved
     )
+
+
+def test_a_cycle_that_selected_no_rfc_forecast_does_not_adopt_the_checkpoints(caplog):
+    """RFC parameters are derived from this cycle's files, so an empty live frame is
+    an answer rather than a gap. Adopting the checkpoint's cursor would index a grid
+    this cycle never built, and write it back out as if this run had produced it."""
+    import logging
+
+    run_a = _make_model(3600.0, _ExecutionPlanLike())
+    run_a._data_assimilation._reservoir_rfc_param_df = pd.DataFrame(
+        {"totalCounts": [12], "timeseries_idx": [48]}
+    )
+    state = _state_from(run_a)
+
+    run_b = _make_model(0.0, _ExecutionPlanLike())
+    run_b._data_assimilation._reservoir_rfc_param_df = pd.DataFrame()
+    with caplog.at_level(logging.WARNING):
+        run_b.load_state(state)
+    assert run_b._data_assimilation._reservoir_rfc_param_df.empty
+    assert "selected no RFC forecast" in caplog.text
 
 
 def test_switching_a_type_on_mid_cycle_works_on_a_fresh_model():

@@ -14,6 +14,7 @@ import logging
 LOG = logging.getLogger("TROUTE")
 
 from troute.routing.fast_reach.reservoir_RFC_da import (
+    ABSURD_DISCHARGE_CMS,
     _RFC_FILENAME,
     _validate_RFC_data,
     read_rfc_timeseries,
@@ -1182,6 +1183,7 @@ class RFCDA(AbstractDA):
                     routing_period=self._run_parameters.get('dt', 300),
                     unavailable_action=rfc_parameters.get(
                         'reservoir_rfc_forecasts_unavailable_action', 'error'),
+                    gages=network.rfc_lake_gage_crosswalk['rfc_gage_id'].dropna(),
                 )
                 self._reservoir_rfc_df, self._reservoir_rfc_param_df = assemble_rfc_dataframes(
                                                                                                 self._rfc_timeseries_df, 
@@ -2320,7 +2322,7 @@ def _rfc_unavailable(msg, action, error=ValueError):
 
 
 def _read_timeseries_files(filepath, timeseries_dates, t0, final_persist_datetime,
-                           routing_period=300, unavailable_action='error'):
+                           routing_period=300, unavailable_action='error', gages=None):
     """Newest RFC forecast per gage that actually covers t0, as one long frame.
 
     Newest-first but coverage-gated: the newest issue has the latest slice start, so
@@ -2343,6 +2345,10 @@ def _read_timeseries_files(filepath, timeseries_dates, t0, final_persist_datetim
     # create temporary dataframe with file names, split up by location and datetime
     df = pd.DataFrame([f.name.split('.') for f in files], columns=['Datetime','dt','ID','rfc','ext'])
     df = df[df['Datetime'].isin(timeseries_dates)][['ID','Datetime','dt']]
+    if gages is not None:
+        # The forecast folder is shared across domains and holds hundreds of gages.
+        # Only the ones this domain routes can say anything about this run.
+        df = df[df['ID'].isin(set(gages))]
     if df.empty:
         msg = (
             f"reservoir RFC DA is enabled but no RFC timeseries file in {filepath} "
@@ -2386,16 +2392,15 @@ def _read_timeseries_files(filepath, timeseries_dates, t0, final_persist_datetim
             'timeSteps': pd.Timedelta(seconds=record.timestep_seconds),
             'Datetime': record.datetimes,
         })
-        # Filter out forecasts that go beyond the rfc_persist_days parameter. This isn't necessary, but removes
-        # excess data, keeping the dataframe of observations as small as possible.
-        # Inclusive, to match the consumer's `current_time <= persist_seconds`.
-        one = one[one['Datetime'] <= final_persist_datetime]
+        # Trim at this forecast's own deadline, which the kernel measures from the issue
+        # rather than from t0. The caller passes the allowance as t0 plus persist_days.
+        one = one[one['Datetime'] <= record.issue_time + (final_persist_datetime - t0)]
         one['timeseries_idx'] = timeseries_idx
         one['file'] = f
-        # Validate the forecast, not the history in front of it: the kernel only reads
-        # forward from t0.
+        # Whether there is anything to assimilate is a question about the forecast, so
+        # the history in front of t0 must not answer it.
         active = one[one['Datetime'] >= t0]
-        one['use_rfc'] = _validate_RFC_data(
+        use_rfc = _validate_RFC_data(
             record.station_id,
             active.discharges,
             active.synthetic_values,
@@ -2406,6 +2411,16 @@ def _read_timeseries_files(filepath, timeseries_dates, t0, final_persist_datetim
             False,
             da_time_step=record.timestep_seconds,
         )
+        # An absurd value is different: when the sample at the cursor is unusable the
+        # kernel walks BACKWARD, so one behind t0 reaches the reservoir just as readily.
+        if use_rfc and any(v >= ABSURD_DISCHARGE_CMS for v in one.discharges):
+            LOG.warning(
+                "reservoir RFC DA: %s holds a discharge at or above the %d cms limit "
+                "before t0, which the backtrack can reach; using level pool instead.",
+                f, ABSURD_DISCHARGE_CMS,
+            )
+            use_rfc = False
+        one['use_rfc'] = use_rfc
         one['da_timestep'] = record.timestep_seconds
         one['issue_time'] = record.issue_time
         rfc_df = pd.concat([rfc_df, one])
@@ -2509,19 +2524,25 @@ def assemble_rfc_dataframes(rfc_timeseries_df, rfc_lake_gage_crosswalk, t0, rfc_
             "off reservoir_da.reservoir_rfc_da.reservoir_rfc_forecasts."
         )
         _rfc_unavailable(msg, action)
-    reservoir_rfc_param_df['use_rfc'] = reservoir_rfc_param_df['use_rfc'].fillna(False)
+    # eq, not fillna: the column is object dtype after the join, and filling it
+    # downcasts silently, which pandas warns about and will change.
+    reservoir_rfc_param_df['use_rfc'] = reservoir_rfc_param_df['use_rfc'].eq(True)
     reservoir_rfc_param_df['totalCounts'] = reservoir_rfc_param_df['totalCounts'].fillna(0)
     reservoir_rfc_param_df['da_timestep'] = reservoir_rfc_param_df['da_timestep'].fillna(0)
     # Make sure columns are the correct types
     reservoir_rfc_param_df['totalCounts'] = reservoir_rfc_param_df['totalCounts'].astype(int)
     reservoir_rfc_param_df['da_timestep'] = reservoir_rfc_param_df['da_timestep'].astype(int)
+    # A lake with no forecast has no deadline. The packer still casts the column to
+    # int32, and NaN there is INT_MIN on some platforms, so give it t0 instead.
+    reservoir_rfc_param_df['issue_time'] = reservoir_rfc_param_df['issue_time'].fillna(t0)
     # Seeded at t0, so the first advance is one cadence out, as the standalone does.
-    reservoir_rfc_param_df['update_time'] = reservoir_rfc_param_df['da_timestep']
+    # Float, because the kernel hands a float32 clock back into this column each window.
+    reservoir_rfc_param_df['update_time'] = (
+        reservoir_rfc_param_df['da_timestep'].astype(float)
+    )
     persist_days = rfc_parameters.get('reservoir_rfc_forecast_persist_days', 11)
-    # Measured from the forecast's own issue, not the run's t0, so the horizon says how
-    # long a product may be used rather than how long this run has been going. A cycle
-    # that adopts a newer issue gets a new allowance; one riding an old issue does not.
-    # The packer turns this into seconds remaining at each window.
+    # Measured from the forecast's issue, not the run's t0: the horizon caps how long a
+    # product may be used. The packer turns it into seconds remaining at each window.
     reservoir_rfc_param_df['persist_until'] = (
         reservoir_rfc_param_df['issue_time'] + timedelta(days=persist_days)
     )

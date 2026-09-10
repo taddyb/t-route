@@ -3,8 +3,10 @@
 ``reservoir_RFC_da`` gates assimilation on ``current_time <= persist_seconds``, and
 ``current_time`` is ``dt * timestep``, which restarts at every forcing window. Handing
 the kernel a whole-horizon duration would therefore re-arm it every window. An absolute
-deadline at the run's t0, packed as the seconds still remaining at each window's start,
-makes the window-local comparison equivalent to the continuous one.
+deadline, packed as the seconds still remaining at each window's start, makes the
+window-local comparison equivalent to the continuous one. The deadline itself is
+derived from the forecast's issue time; these cases fix it so the windowing is what
+they measure.
 
 These step ``reservoir_RFC_da`` directly and mirror the kernel's inter-window carry by
 hand, so they pin the gate arithmetic and nothing above it. The end-to-end check that
@@ -138,15 +140,6 @@ def test_state_carry_round_trips_the_deadline():
     assert updated["persist_until"].iloc[0] == before
     assert updated["update_time"].iloc[0] == 7200.0
     assert updated["timeseries_idx"].iloc[0] == 30
-
-
-def test_deadline_survives_a_checkpoint_round_trip():
-    """BMI checkpoints pickle the RFC parameter frame whole, so the deadline rides along."""
-    import pickle
-
-    _, params = _frames(persist_days=2.0)
-    restored = pickle.loads(pickle.dumps(params))
-    assert restored["persist_until"].iloc[0] == params["persist_until"].iloc[0]
 
 
 def test_a_state_without_the_deadline_is_refused():

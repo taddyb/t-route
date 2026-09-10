@@ -114,8 +114,8 @@ def test_glacially_dammed_lakes_are_reported(caplog):
     obs = pd.DataFrame({_T0: [5.0]}, index=[9003])
     params = pd.DataFrame(
         {"totalCounts": [1], "timeseries_idx": [0], "file": ["f"], "use_rfc": [True],
-         "da_timestep": [3600], "update_time": [0], "rfc_persist_days": [11],
-         # The packer anchors the persistence horizon to the run start and refuses a
+         "da_timestep": [3600], "update_time": [0],
+         # The packer carries the persistence deadline the assembler derived and refuses a
          # frame without it, so a hand-built one has to carry it too.
          "persist_until": [_T0 + pd.Timedelta(days=11)]},
         index=[9003],

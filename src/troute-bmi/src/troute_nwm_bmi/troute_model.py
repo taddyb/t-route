@@ -741,10 +741,27 @@ class Model:
         cycle built. Even the horizon is derived, since it is measured from the
         forecast's issue time: carrying it would deny a newer forecast its allowance.
         """
-        if live_on is False or live.empty or saved is None or saved.empty:
+        if live_on is False:
             return self._restore_da_frame(
                 saved, live, "RFC reservoir DA parameters",
                 advanced=advanced, live_on=live_on,
+            )
+        if advanced and not live.empty:
+            # Neither frame describes the checkpoint's time: the live selection was
+            # built for this model's t0, the saved cursor for its own cycle's grid.
+            msg = (
+                "load_state: this model has already routed, so its RFC selection is "
+                "past the checkpoint's time and the checkpoint's own cursor indexes a "
+                "grid this run did not build. Restore into a fresh model."
+            )
+            raise ValueError(msg)
+        if saved is not None and not saved.empty and live.empty:
+            # An empty live frame is this cycle's answer, not a gap for the checkpoint
+            # to fill: its cursor indexes a grid this cycle never built.
+            LOG.warning(
+                "load_state: this cycle selected no RFC forecast, so the checkpoint's "
+                "%d row(s) are dropped rather than carried into the state it writes.",
+                len(saved),
             )
         return live
 

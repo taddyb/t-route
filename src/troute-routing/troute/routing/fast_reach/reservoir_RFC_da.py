@@ -30,6 +30,10 @@ class RFCTimeSeries(NamedTuple):
     issue_time: pd.Timestamp
 
 
+# Twice the Mississippi's historical peak. Nothing downstream compensates for a
+# value above it, so it disqualifies a forecast wherever the kernel could read it.
+ABSURD_DISCHARGE_CMS = 90000
+
 _FILENAME_CADENCE = re.compile(r"\.(\d+)min\.")
 # The production RFC ingestion naming: <issue>.<cadence>min.<gage>.RFCTimeSeries.ncdf.
 # Matched with fullmatch, since `$` would also accept a trailing newline.
@@ -267,7 +271,7 @@ def _validate_RFC_data(lake_number,
             "missing or negative ones; using level pool instead.", lake_number,
         )
     # ANY, not all: nothing downstream compensates for an absurd value.
-    elif any(v >= 90000 for v in time_series):
+    elif any(v >= ABSURD_DISCHARGE_CMS for v in time_series):
         use_RFC = False
         LOG.warning(
             "reservoir RFC DA: the forecast for reservoir %s reaches %.0f cms, at or "
