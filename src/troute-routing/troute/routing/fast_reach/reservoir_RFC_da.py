@@ -331,6 +331,9 @@ def preprocess_RFC_data(model_start_date,
             int(record.datetimes.get_loc(t0_stamp)) if t0_stamp in record.datetimes else -1
         )
         timeseries_update_time = time_step_seconds
+        # How much of the forecast's allowance is already spent when the run starts.
+        # The horizon is measured from the issue, and this caller's clock starts at t0.
+        issue_age_seconds = int((t0_stamp - record.issue_time).total_seconds())
     else:
         # No file found. The return below is unconditional, so every name it hands back
         # must be defined and of the type the caller expects.
@@ -340,6 +343,7 @@ def preprocess_RFC_data(model_start_date,
         timeseries_update_time = 0
         time_step_seconds = 0
         total_counts = 0
+        issue_age_seconds = 0
 
     # check if conditions are met for using RFC DA.
     use_RFC = have_file and timeseries_idx >= 0 and _validate_RFC_data(lake_number, 
@@ -356,7 +360,8 @@ def preprocess_RFC_data(model_start_date,
             timeseries_update_time, 
             time_step_seconds, 
             total_counts,
-            rfc_timeseries_file)
+            rfc_timeseries_file,
+            issue_age_seconds)
 
 def reservoir_RFC_da(use_RFC, time_series, timeseries_idx, total_counts, routing_period, current_time,
                      update_time, DA_time_step, rfc_forecast_persist_seconds, reservoir_type, inflow, 

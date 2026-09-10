@@ -21,6 +21,7 @@ class reservoir_model():
                      '_levelpool_outflow,', '_timeseries_update_time',
                      '_timeseries_idx', '_rfc_gage_id', '_rfc_timeseries_folder',
                      '_rfc_timeseries_file', '_rfc_timeseries_offset_hours', '_rfc_forecast_persist_days',
+                     '_rfc_issue_age_seconds',
                      '_time_step_seconds', '_total_counts', '_timeseries_discharges', 
                      '_use_RFC']
         
@@ -91,7 +92,8 @@ class reservoir_model():
              self._update_time, 
              self._da_time_step, 
              self._total_counts,
-             self._rfc_timeseries_file) = preprocess_RFC_data(self._t0,
+             self._rfc_timeseries_file,
+             self._rfc_issue_age_seconds) = preprocess_RFC_data(self._t0,
                                      self._rfc_timeseries_offset_hours,
                                      self._rfc_gage_id,
                                      self._rfc_timeseries_folder,
@@ -182,7 +184,8 @@ class reservoir_model():
                 self._time + self._time_step,             # model time (sec)
                 self._update_time,                        # time to advance to next time series index
                 self._da_time_step,                       # frequency of DA observations (sec)
-                self._rfc_forecast_persist_days*24*60*60, # max seconds RFC forecasts will be used/persisted (days -> seconds)
+                self._rfc_forecast_persist_days*24*60*60
+                - self._rfc_issue_age_seconds,            # allowance left, measured from the forecast's issue
                 self._res_type,                           # reservoir type
                 inflow,                                   # waterbody inflow (cms)
                 initial_water_elevation,                  # water surface el., previous timestep (m)

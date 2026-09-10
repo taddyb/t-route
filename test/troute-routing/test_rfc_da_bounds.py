@@ -118,7 +118,7 @@ def test_standalone_setup_without_a_file_falls_back_to_level_pool():
     """
     from troute.routing.fast_reach.reservoir_RFC_da import preprocess_RFC_data
 
-    use_rfc, series, idx, update_time, step_seconds, counts, _ = preprocess_RFC_data(
+    use_rfc, series, idx, update_time, step_seconds, counts, _, _ = preprocess_RFC_data(
         "2021-10-21_12:00:00", 28, "NOSUCHGAGE", "test/BMI/rfc_timeseries/", 17609317, 300
     )
     assert use_rfc is False

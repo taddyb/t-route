@@ -70,7 +70,7 @@ def _kernel_seed():
 
 def _standalone_seed():
     """What preprocess_RFC_data hands the standalone reservoir BMI for the same gage."""
-    use_rfc, series, idx, update_time, cadence, counts, _ = preprocess_RFC_data(
+    use_rfc, series, idx, update_time, cadence, counts, _, _ = preprocess_RFC_data(
         "2021-10-21_12:00:00", 28, "KNFC1", f"{_FIXTURE.parent}/", 1, 300
     )
     assert use_rfc is True
@@ -113,7 +113,7 @@ def test_standalone_falls_back_to_an_older_covering_forecast(tmp_path):
     with netCDF4.Dataset(str(newest), "a") as ds:
         ds.sliceStartTimeUTC = "2021-10-22_00:00:00"  # begins after t0
 
-    use_rfc, _, idx, _, _, _, chosen = preprocess_RFC_data(
+    use_rfc, _, idx, _, _, _, chosen, _ = preprocess_RFC_data(
         "2021-10-21_12:00:00", 28, "KNFC1", f"{tmp_path}/", 1, 300
     )
     assert chosen == "2021-10-21_12.60min.KNFC1.RFCTimeSeries.ncdf"
@@ -131,3 +131,55 @@ def test_standalone_still_reports_no_usable_forecast(tmp_path):
         "2021-10-21_12:00:00", 28, "KNFC1", f"{tmp_path}/", 1, 300
     )
     assert use_rfc is False
+
+
+def _only(tmp_path, name: str) -> str:
+    """A folder holding one issue, so the selected forecast has a known age."""
+    shutil.copy(_FIXTURE.parent / name, tmp_path / name)
+    return f"{tmp_path}/"
+
+
+def _stamps(t0: pd.Timestamp, lookback: int = 28) -> list[str]:
+    return [(t0 - timedelta(hours=h)).strftime("%Y-%m-%d_%H")
+            for h in range(lookback + 1)]
+
+
+def test_both_entry_points_expire_on_the_same_horizon(tmp_path):
+    """The horizon belongs to the forecast, so both callers must derive the same one.
+
+    The network path packs `persist_until - window t0`. The standalone has only a clock
+    that starts at 0, so it must subtract the forecast's age itself; passing
+    `persist_days * 86400` there let a six hour old issue live six hours longer than
+    the same forecast did in routing.
+    """
+    persist_days = 11
+    t0 = pd.Timestamp("2021-10-21 18:00")
+    folder = _only(tmp_path, "2021-10-21_12.60min.KNFC1.RFCTimeSeries.ncdf")
+
+    *_, issue_age = preprocess_RFC_data(
+        t0.strftime("%Y-%m-%d_%H:%M:%S"), 0, "KNFC1", folder, 1, 300
+    )
+    assert issue_age == 6 * 3600  # the run starts six hours into the allowance
+    standalone_seconds = persist_days * 86400 - issue_age
+
+    raw = _read_timeseries_files(
+        folder.rstrip("/"), _stamps(t0), t0, t0 + timedelta(days=persist_days)
+    )
+    crosswalk = pd.DataFrame(
+        {"rfc_gage_id": ["KNFC1"], "rfc_lake_id": [1]}
+    ).set_index("rfc_lake_id")
+    _, params = assemble_rfc_dataframes(
+        raw, crosswalk, t0, {"reservoir_rfc_forecast_persist_days": persist_days}
+    )
+    network_seconds = (params["persist_until"].iloc[0] - t0).total_seconds()
+    assert standalone_seconds == network_seconds
+
+
+def test_the_standalone_horizon_shrinks_with_the_forecast_age(tmp_path):
+    """The same forecast read later has less of its allowance left."""
+    folder = _only(tmp_path, "2021-10-21_12.60min.KNFC1.RFCTimeSeries.ncdf")
+    ages = [
+        preprocess_RFC_data(t0, 0, "KNFC1", folder, 1, 300)[-1]
+        for t0 in ("2021-10-21_12:00:00", "2021-10-21_18:00:00")
+    ]
+    assert ages == [0, 6 * 3600]

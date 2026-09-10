@@ -46,7 +46,7 @@ class DAforcing_model():
                      '_usace_reservoir_Array',
                      '_rfc_da_timestep', '_rfc_totalCounts', '_rfc_synthetic_values',
                      '_rfc_discharges', '_rfc_timeseries_idx', '_rfc_use_rfc',
-                     '_rfc_Datetime', '_rfc_timeSteps', '_rfc_StationId_array',
+                     '_rfc_Datetime', '_rfc_timeSteps', '_rfc_issue_time', '_rfc_StationId_array',
                      '_rfc_StationId_stringLengths', '_rfc_List_array',
                      '_rfc_List_stringLengths',
                      '_lastObs_gageArray', '_lastObs_gageStringLengths', '_lastObs_timeSince',
@@ -315,6 +315,7 @@ class DAforcing_model():
             self._rfc_use_rfc = np.zeros(0)   
             self._rfc_Datetime = np.zeros(0)   
             self._rfc_timeSteps = np.zeros(0)   
+            self._rfc_issue_time = np.zeros(0)
             self._rfc_StationId_array = np.zeros(0) 
             self._rfc_StationId_stringLengths = np.zeros(0) 
             self._rfc_List_array = np.zeros(0) 
@@ -325,7 +326,7 @@ class DAforcing_model():
                 (_rfc_da_timestep, _rfc_totalCounts, _rfc_synthetic_values, _rfc_discharges, \
                     _rfc_timeseries_idx, _rfc_use_rfc, _rfc_Datetime, _rfc_timeSteps, \
                     _rfc_StationId_array, _rfc_StationId_stringLengths, _rfc_List_array, \
-                    _rfc_List_stringLengths) = \
+                    _rfc_List_stringLengths, _rfc_issue_time) = \
                     df2a._bmi_disassemble_rfc_timeseries (self._rfc_timeseries_df, start_datetime)
                 # save all data in class instance
                 self._rfc_da_timestep = _rfc_da_timestep
@@ -336,6 +337,7 @@ class DAforcing_model():
                 self._rfc_use_rfc = _rfc_use_rfc
                 self._rfc_Datetime = _rfc_Datetime
                 self._rfc_timeSteps = _rfc_timeSteps
+                self._rfc_issue_time = _rfc_issue_time
                 self._rfc_StationId_array = _rfc_StationId_array
                 self._rfc_StationId_stringLengths = _rfc_StationId_stringLengths
                 self._rfc_List_array = _rfc_List_array

@@ -1132,6 +1132,7 @@ class RFCDA(AbstractDA):
                         rfc_use_rfc = value_dict['rfc_use_rfc']
                         rfc_Datetime = value_dict['rfc_Datetime']
                         rfc_timeSteps = value_dict['rfc_timeSteps']
+                        rfc_issue_time = value_dict.get('rfc_issue_time')
                 
                         rfc_StationId_stringLengths = value_dict['rfc_StationId_stringLengths']
                         rfc_List_array = value_dict['rfc_List_array']
@@ -1144,7 +1145,7 @@ class RFCDA(AbstractDA):
                                 rfc_use_rfc, rfc_Datetime, rfc_timeSteps, \
                                 rfc_StationId_array, rfc_StationId_stringLengths, \
                                 rfc_List_array, rfc_List_stringLengths, 
-                                dateNull)
+                                dateNull, rfc_issue_time)
 
                 self._reservoir_rfc_df, self._reservoir_rfc_param_df = assemble_rfc_dataframes(
                                                                                             rfc_df, 
