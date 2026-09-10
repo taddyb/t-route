@@ -194,3 +194,98 @@ def test_a_lake_the_hydrofabric_gives_no_gage_is_reported_not_fatal(caplog):
         _, par = assemble_rfc_dataframes(_frame("A1", t0), crosswalk, t0, _PARAMS)
     assert not par.loc[102, "use_rfc"]
     assert "no gage in the hydrofabric" in caplog.text
+
+
+# ------------------------------------------------------------------ the summary line
+
+_WITH_WINDOW = {
+    **_PARAMS,
+    "reservoir_rfc_forecasts_lookback_hours": 28,
+    "reservoir_rfc_forecasts_offset_hours": 0,
+}
+
+
+def _summaries(caplog) -> list[str]:
+    return [r.getMessage() for r in caplog.records
+            if r.levelno == logging.INFO and "reservoir RFC DA:" in r.getMessage()]
+
+
+def test_the_run_reports_what_it_selected(caplog):
+    """One greppable line per run: an operator does not read every warning."""
+    t0 = _t0()
+    with caplog.at_level(logging.INFO):
+        assemble_rfc_dataframes(_frame("A1", t0), _crosswalk(["A1"]), t0, _WITH_WINDOW)
+    lines = _summaries(caplog)
+    assert len(lines) == 1
+    assert "1 of 1 reservoir(s) have a forecast selected, 0 run level pool" in lines[0]
+    assert "Searched" in lines[0]
+
+
+def test_the_summary_counts_the_fallbacks(caplog):
+    t0 = _t0()
+    with caplog.at_level(logging.INFO):
+        assemble_rfc_dataframes(
+            _frame("A1", t0), _crosswalk(["A1", "B2"]), t0,
+            {**_WITH_WINDOW, "reservoir_rfc_forecasts_unavailable_action": "level_pool"},
+        )
+    assert "1 of 2 reservoir(s) have a forecast selected, 1 run level pool" in caplog.text
+
+
+def test_the_summary_reports_the_age_of_what_it_selected(caplog):
+    """A domain whose issues are all near the lookback edge is one bad hour from none."""
+    t0 = _t0()
+    frame = _frame("A1", t0)
+    frame["issue_time"] = t0 - pd.Timedelta(hours=26)
+    with caplog.at_level(logging.INFO):
+        assemble_rfc_dataframes(frame, _crosswalk(["A1"]), t0, _WITH_WINDOW)
+    assert "26 to 26 h old" in caplog.text
+
+
+def test_selecting_nothing_names_the_window_not_just_the_absence(caplog):
+    """Every forecast rejected by validation still leaves a countable roster."""
+    t0 = _t0()
+    frame = _frame("A1", t0)
+    frame["use_rfc"] = False
+    with caplog.at_level(logging.INFO):
+        assemble_rfc_dataframes(frame, _crosswalk(["A1"]), t0, _WITH_WINDOW)
+    line = _summaries(caplog)[0]
+    assert "no forecast selected for any of 1 reservoir(s)" in line
+    assert "Searched" in line
+
+
+def test_an_empty_window_still_reports_the_span_it_searched(caplog):
+    """The case the line exists for: nothing dated inside the lookback at all.
+
+    That path returns early, so the summary has to be emitted there too rather than
+    only where a selection succeeded.
+    """
+    t0 = _t0()
+    with caplog.at_level(logging.INFO):
+        assemble_rfc_dataframes(
+            pd.DataFrame(), _crosswalk(["A1", "B2"]), t0,
+            {**_WITH_WINDOW, "reservoir_rfc_forecasts_unavailable_action": "level_pool"},
+        )
+    line = _summaries(caplog)[0]
+    assert "no forecast selected for any of 2 reservoir(s)" in line
+    assert "Searched" in line
+
+
+def test_observations_that_miss_t0_also_report(caplog):
+    t0 = _t0()
+    with caplog.at_level(logging.INFO):
+        assemble_rfc_dataframes(
+            _frame("A1", t0 + pd.Timedelta(days=3)), _crosswalk(["A1"]), t0,
+            {**_WITH_WINDOW, "reservoir_rfc_forecasts_unavailable_action": "level_pool"},
+        )
+    assert "no forecast selected for any of 1 reservoir(s)" in _summaries(caplog)[0]
+
+
+def test_a_forecast_issued_after_t0_reports_a_negative_age(caplog):
+    """Positive-offset windows reach past t0, so the age is signed."""
+    t0 = _t0()
+    frame = _frame("A1", t0)
+    frame["issue_time"] = t0 + pd.Timedelta(hours=3)
+    with caplog.at_level(logging.INFO):
+        assemble_rfc_dataframes(frame, _crosswalk(["A1"]), t0,
+                                {**_WITH_WINDOW, "reservoir_rfc_forecasts_offset_hours": 28})
+    assert "-3 to -3 h old" in _summaries(caplog)[0]

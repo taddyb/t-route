@@ -2424,6 +2424,7 @@ def assemble_rfc_dataframes(rfc_timeseries_df, rfc_lake_gage_crosswalk, t0, rfc_
             "reservoir_da.reservoir_rfc_da.reservoir_rfc_forecasts."
         )
         _rfc_unavailable(msg, action)
+        _report_rfc_selection(None, t0, rfc_parameters, rfc_lake_gage_crosswalk)
         return pd.DataFrame(), pd.DataFrame()
     # Create reservoir_rfc_df dataframe of observations, rows are locations and columns are dates.
     reservoir_rfc_df = rfc_df[['stationId','discharges','Datetime']].sort_values(['stationId','Datetime']).pivot(index='stationId',columns='Datetime').fillna(-999.0)
@@ -2467,6 +2468,7 @@ def assemble_rfc_dataframes(rfc_timeseries_df, rfc_lake_gage_crosswalk, t0, rfc_
             "reservoir_da.reservoir_rfc_da.reservoir_rfc_forecasts."
         )
         _rfc_unavailable(msg, action)
+        _report_rfc_selection(None, t0, rfc_parameters, rfc_lake_gage_crosswalk)
         return pd.DataFrame(), pd.DataFrame()
     cadences = set(reservoir_rfc_param_df['da_timestep'].dropna().astype(int))
     if len(cadences) > 1:
@@ -2523,8 +2525,50 @@ def assemble_rfc_dataframes(rfc_timeseries_df, rfc_lake_gage_crosswalk, t0, rfc_
     reservoir_rfc_param_df['persist_until'] = (
         reservoir_rfc_param_df['issue_time'] + timedelta(days=persist_days)
     )
+    _report_rfc_selection(reservoir_rfc_param_df, t0, rfc_parameters)
 
     return reservoir_rfc_df, reservoir_rfc_param_df
+
+
+def _rfc_search_window(t0, rfc_parameters):
+    """The span the selection actually searched, as the reader builds it."""
+    lookback = rfc_parameters.get('reservoir_rfc_forecasts_lookback_hours') or 0
+    offset = rfc_parameters.get('reservoir_rfc_forecasts_offset_hours') or 0
+    end = t0 + timedelta(hours=offset)
+    return end - timedelta(hours=lookback), end
+
+
+def _report_rfc_selection(param_df, t0, rfc_parameters, crosswalk=None):
+    """One line per run saying what the RFC DA actually has to work with.
+
+    "Selected", not "applied": whether a forecast reaches a reservoir is decided in the
+    kernel, which keeps only the cursor. The searched window is reported because a
+    domain running level pool with every issue just outside it looks identical, from
+    the outflow alone, to one with no forecasts at all.
+    """
+    start, end = _rfc_search_window(t0, rfc_parameters)
+    selected = (
+        param_df['use_rfc'].fillna(False).astype(bool)
+        if param_df is not None and not param_df.empty
+        else None
+    )
+    total = (
+        len(param_df) if selected is not None
+        else (0 if crosswalk is None else len(crosswalk))
+    )
+    n = int(selected.sum()) if selected is not None else 0
+    if not n:
+        LOG.info(
+            "reservoir RFC DA: no forecast selected for any of %d reservoir(s); all run "
+            "level pool. Searched %s to %s.", total, start, end,
+        )
+        return
+    ages = (t0 - param_df.loc[selected, 'issue_time']).dt.total_seconds() / 3600
+    LOG.info(
+        "reservoir RFC DA: %d of %d reservoir(s) have a forecast selected, %d run level "
+        "pool. Selected issues are %.0f to %.0f h old at t0=%s. Searched %s to %s.",
+        n, total, total - n, ages.min(), ages.max(), t0, start, end,
+    )
 
 def _read_lastobs_file(
         lastobsfile,
